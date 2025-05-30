@@ -1,11 +1,4 @@
-# SeniorDesign
+# Synth Software Repository
+Put all software related to the Teensy and its peripherals here
 
-## bruh
-
-### chat we are so cooked
-
-this whole shit chopped fr
-
-frfr
-
-part 2
+(this shit chopped fr, we aint makin it)
