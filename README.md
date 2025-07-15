@@ -1,10 +1,2 @@
-
-# SeniorDesign
-
-## bruh
-
-### chat we are so cooked
-
-this whole shit chopped fr
-
-LET'S GO WE GOT THIS
+# Synth Software Repository
+Put all software related to the Daisy Seed and its peripherals here
