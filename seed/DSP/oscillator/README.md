@@ -1,1 +1,1 @@
-Generates sine wave output
+Two voice, two oscillator per voice, synthesizer. Potentiometer control for volume, pitch, and pulse width. Buttons that allow changing shape of wave. Last button changes voice to control

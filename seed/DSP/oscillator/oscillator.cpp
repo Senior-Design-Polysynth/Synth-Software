@@ -65,9 +65,6 @@ float QuantizePitch(float pitch) {
 
 }
 
-
-
-
 void AudioCallback(AudioHandle::InputBuffer in,
                   AudioHandle::OutputBuffer out,
                   size_t size)
