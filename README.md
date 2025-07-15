@@ -1,3 +1,4 @@
+
 # SeniorDesign
 
 ## bruh
@@ -5,3 +6,5 @@
 ### chat we are so cooked
 
 this whole shit chopped fr
+
+LET'S GO WE GOT THIS
