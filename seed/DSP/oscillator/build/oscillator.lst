@@ -1,4 +1,4 @@
-ARM GAS  /tmp/cc29Sbe2.s 			page 1
+ARM GAS  /tmp/ccdA0TMp.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   32              		@ args = 0, pretend = 0, frame = 0
   33              		@ frame_needed = 0, uses_anonymous_args = 0
   34              		@ link register save eliminated.
-ARM GAS  /tmp/cc29Sbe2.s 			page 2
+ARM GAS  /tmp/ccdA0TMp.s 			page 2
 
 
   35              		.loc 1 24 20 is_stmt 0 view .LVU1
@@ -118,7 +118,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    7:../../../libDaisy/src/sys/system.h **** #include "per/tim.h"
    8:../../../libDaisy/src/sys/system.h **** 
    9:../../../libDaisy/src/sys/system.h **** namespace daisy
-ARM GAS  /tmp/cc29Sbe2.s 			page 3
+ARM GAS  /tmp/ccdA0TMp.s 			page 3
 
 
   10:../../../libDaisy/src/sys/system.h **** {
@@ -178,7 +178,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   64:../../../libDaisy/src/sys/system.h ****         INTERNAL_FLASH = 0,
   65:../../../libDaisy/src/sys/system.h ****         ITCMRAM,
   66:../../../libDaisy/src/sys/system.h ****         DTCMRAM,
-ARM GAS  /tmp/cc29Sbe2.s 			page 4
+ARM GAS  /tmp/ccdA0TMp.s 			page 4
 
 
   67:../../../libDaisy/src/sys/system.h ****         SRAM_D1,
@@ -238,7 +238,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   18:../../../libDaisy/src/hid/usb.h **** class UsbHandle
   19:../../../libDaisy/src/hid/usb.h **** {
   20:../../../libDaisy/src/hid/usb.h ****   public:
-ARM GAS  /tmp/cc29Sbe2.s 			page 5
+ARM GAS  /tmp/ccdA0TMp.s 			page 5
 
 
   21:../../../libDaisy/src/hid/usb.h ****     /** Return values for USBHandle Functions */
@@ -298,7 +298,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   27:../../../libDaisy/src/per/adc.h ****  *           each channel sharing data lines must be set to the maximum
   28:../../../libDaisy/src/per/adc.h ****  *           number of channels, even if some multiplexers have fewer
   29:../../../libDaisy/src/per/adc.h ****  *           inputs connected.
-ARM GAS  /tmp/cc29Sbe2.s 			page 6
+ARM GAS  /tmp/ccdA0TMp.s 			page 6
 
 
   30:../../../libDaisy/src/per/adc.h **** */
@@ -358,7 +358,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   84:../../../libDaisy/src/per/adc.h ****     ConversionSpeed speed_;
   85:../../../libDaisy/src/per/adc.h **** };
   86:../../../libDaisy/src/per/adc.h **** 
-ARM GAS  /tmp/cc29Sbe2.s 			page 7
+ARM GAS  /tmp/ccdA0TMp.s 			page 7
 
 
   87:../../../libDaisy/src/per/adc.h **** /**
@@ -418,7 +418,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   25:../../../libDaisy/src/hid/audio.h ****     /** Manually configurable details about the Audio Engine */
   26:../../../libDaisy/src/hid/audio.h ****     /** TODO: Figure out how to get samplerate in here. */
   27:../../../libDaisy/src/hid/audio.h ****     struct Config
-ARM GAS  /tmp/cc29Sbe2.s 			page 8
+ARM GAS  /tmp/ccdA0TMp.s 			page 8
 
 
   28:../../../libDaisy/src/hid/audio.h ****     {
@@ -478,7 +478,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   82:../../../libDaisy/src/hid/audio.h **** 
   83:../../../libDaisy/src/hid/audio.h ****     /** Interleaving Output buffer 
   84:../../../libDaisy/src/hid/audio.h ****      ** audio is prepared as { L0, R0, L1, R1, . . . LN, RN }
-ARM GAS  /tmp/cc29Sbe2.s 			page 9
+ARM GAS  /tmp/ccdA0TMp.s 			page 9
 
 
   85:../../../libDaisy/src/hid/audio.h ****     */
@@ -538,7 +538,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   22:oscillator.cpp **** 
   23:oscillator.cpp **** // Helper function to set waveform based on index
   24:oscillator.cpp **** void SetOscWaveform(Oscillator& osc, int index) {
-ARM GAS  /tmp/cc29Sbe2.s 			page 10
+ARM GAS  /tmp/ccdA0TMp.s 			page 10
 
 
   25:oscillator.cpp ****     switch(index) {
@@ -563,24 +563,50 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   44:oscillator.cpp ****     
   45:oscillator.cpp ****     // Convert MIDI note to frequency (A4 = 440Hz)
   46:oscillator.cpp ****     return 440.0f * powf(2.0f, (midiNote - 69.0f) / 12.0f);
-  47:oscillator.cpp **** }
-  48:oscillator.cpp **** 
-  49:oscillator.cpp **** void AudioCallback(AudioHandle::InputBuffer in,
-  50:oscillator.cpp ****                   AudioHandle::OutputBuffer out,
-  51:oscillator.cpp ****                   size_t size)
-  52:oscillator.cpp **** {
- 104              		.loc 7 52 1 is_stmt 1 view -0
+  47:oscillator.cpp **** 
+  48:oscillator.cpp ****     // To quantize to C major scale instead of chromatic:
+  49:oscillator.cpp **** // (Add after quantization step)
+  50:oscillator.cpp **** int notesInOctave[] = {0, 2, 4, 5, 7, 9, 11}; // C major scale degrees
+  51:oscillator.cpp **** int octave = (int)midiNote / 12;
+  52:oscillator.cpp **** int noteInOctave = (int)midiNote % 12;
+  53:oscillator.cpp **** 
+  54:oscillator.cpp **** // Find nearest scale note
+  55:oscillator.cpp **** int closestNote = 0;
+  56:oscillator.cpp **** int minDistance = 12;
+  57:oscillator.cpp **** for(int i = 0; i < 7; i++) {
+  58:oscillator.cpp ****     int distance = abs(noteInOctave - notesInOctave[i]);
+  59:oscillator.cpp ****     if(distance < minDistance) {
+  60:oscillator.cpp ****         minDistance = distance;
+  61:oscillator.cpp ****         closestNote = notesInOctave[i];
+  62:oscillator.cpp ****     }
+  63:oscillator.cpp **** }
+  64:oscillator.cpp **** midiNote = octave * 12 + closestNote;
+  65:oscillator.cpp **** 
+  66:oscillator.cpp **** 
+  67:oscillator.cpp **** }
+  68:oscillator.cpp **** 
+  69:oscillator.cpp **** 
+  70:oscillator.cpp **** 
+  71:oscillator.cpp **** 
+  72:oscillator.cpp **** void AudioCallback(AudioHandle::InputBuffer in,
+  73:oscillator.cpp ****                   AudioHandle::OutputBuffer out,
+  74:oscillator.cpp ****                   size_t size)
+  75:oscillator.cpp **** {
+ 104              		.loc 7 75 1 is_stmt 1 view -0
  105              		.cfi_startproc
  106              		@ args = 0, pretend = 0, frame = 0
  107              		@ frame_needed = 0, uses_anonymous_args = 0
-  53:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
- 108              		.loc 7 53 5 view .LVU13
+  76:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
+ 108              		.loc 7 76 5 view .LVU13
+ARM GAS  /tmp/ccdA0TMp.s 			page 11
+
+
  109              	.LBB187:
- 110              		.loc 7 53 25 view .LVU14
+ 110              		.loc 7 76 25 view .LVU14
  111 0000 4AB3     		cbz	r2, .L12
  112              	.LBE187:
-  52:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
- 113              		.loc 7 52 1 is_stmt 0 view .LVU15
+  75:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
+ 113              		.loc 7 75 1 is_stmt 0 view .LVU15
  114 0002 70B5     		push	{r4, r5, r6, lr}
  115              		.cfi_def_cfa_offset 16
  116              		.cfi_offset 4, -16
@@ -590,94 +616,91 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  120 0004 0D46     		mov	r5, r1
  121 0006 1646     		mov	r6, r2
  122              	.LBB191:
- 123              		.loc 7 53 16 view .LVU16
+ 123              		.loc 7 76 16 view .LVU16
  124 0008 0024     		movs	r4, #0
  125              	.LBE191:
-  52:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
- 126              		.loc 7 52 1 view .LVU17
+  75:oscillator.cpp ****     for(size_t i = 0; i < size; i++)
+ 126              		.loc 7 75 1 view .LVU17
  127 000a 2DED028B 		vpush.64	{d8}
  128              		.cfi_def_cfa_offset 24
  129              		.cfi_offset 80, -24
-ARM GAS  /tmp/cc29Sbe2.s 			page 11
-
-
  130              		.cfi_offset 81, -20
  131              	.LVL3:
  132              	.L6:
  133              	.LBB192:
  134              	.LBB188:
-  54:oscillator.cpp ****     {
-  55:oscillator.cpp ****         float mixed = osc1.Process() + osc2.Process() + osc3.Process() + osc4.Process();
- 135              		.loc 7 55 9 is_stmt 1 discriminator 2 view .LVU18
- 136              		.loc 7 55 35 is_stmt 0 discriminator 2 view .LVU19
+  77:oscillator.cpp ****     {
+  78:oscillator.cpp ****         float mixed = osc1.Process() + osc2.Process() + osc3.Process() + osc4.Process();
+ 135              		.loc 7 78 9 is_stmt 1 discriminator 2 view .LVU18
+ 136              		.loc 7 78 35 is_stmt 0 discriminator 2 view .LVU19
  137 000e 1248     		ldr	r0, .L15
  138 0010 FFF7FEFF 		bl	_ZN7daisysp10Oscillator7ProcessEv
  139              	.LVL4:
  140 0014 F0EE408A 		vmov.f32	s17, s0
- 141              		.loc 7 55 52 discriminator 2 view .LVU20
+ 141              		.loc 7 78 52 discriminator 2 view .LVU20
  142 0018 1048     		ldr	r0, .L15+4
  143 001a FFF7FEFF 		bl	_ZN7daisysp10Oscillator7ProcessEv
  144              	.LVL5:
- 145              		.loc 7 55 69 discriminator 2 view .LVU21
+ 145              		.loc 7 78 69 discriminator 2 view .LVU21
  146 001e 1048     		ldr	r0, .L15+8
- 147              		.loc 7 55 38 discriminator 2 view .LVU22
+ 147              		.loc 7 78 38 discriminator 2 view .LVU22
  148 0020 78EE808A 		vadd.f32	s17, s17, s0
- 149              		.loc 7 55 69 discriminator 2 view .LVU23
+ 149              		.loc 7 78 69 discriminator 2 view .LVU23
  150 0024 FFF7FEFF 		bl	_ZN7daisysp10Oscillator7ProcessEv
  151              	.LVL6:
- 152              		.loc 7 55 86 discriminator 2 view .LVU24
+ 152              		.loc 7 78 86 discriminator 2 view .LVU24
  153 0028 0E48     		ldr	r0, .L15+12
- 154              		.loc 7 55 55 discriminator 2 view .LVU25
+ 154              		.loc 7 78 55 discriminator 2 view .LVU25
  155 002a 78EE808A 		vadd.f32	s17, s17, s0
- 156              		.loc 7 55 86 discriminator 2 view .LVU26
+ 156              		.loc 7 78 86 discriminator 2 view .LVU26
  157 002e FFF7FEFF 		bl	_ZN7daisysp10Oscillator7ProcessEv
  158              	.LVL7:
-  56:oscillator.cpp ****         out[0][i] = mixed;
-  57:oscillator.cpp ****         out[1][i] = mixed;
- 159              		.loc 7 57 19 discriminator 2 view .LVU27
+  79:oscillator.cpp ****         out[0][i] = mixed;
+  80:oscillator.cpp ****         out[1][i] = mixed;
+ 159              		.loc 7 80 19 discriminator 2 view .LVU27
+ARM GAS  /tmp/ccdA0TMp.s 			page 12
+
+
  160 0032 D5E90003 		ldrd	r0, r3, [r5]
-  55:oscillator.cpp ****         out[0][i] = mixed;
- 161              		.loc 7 55 87 discriminator 2 view .LVU28
+  78:oscillator.cpp ****         out[0][i] = mixed;
+ 161              		.loc 7 78 87 discriminator 2 view .LVU28
  162 0036 38EE800A 		vadd.f32	s0, s17, s0
  163              	.LVL8:
-  56:oscillator.cpp ****         out[0][i] = mixed;
- 164              		.loc 7 56 9 is_stmt 1 discriminator 2 view .LVU29
-  56:oscillator.cpp ****         out[0][i] = mixed;
- 165              		.loc 7 56 19 is_stmt 0 discriminator 2 view .LVU30
+  79:oscillator.cpp ****         out[0][i] = mixed;
+ 164              		.loc 7 79 9 is_stmt 1 discriminator 2 view .LVU29
+  79:oscillator.cpp ****         out[0][i] = mixed;
+ 165              		.loc 7 79 19 is_stmt 0 discriminator 2 view .LVU30
  166 003a 00EB8400 		add	r0, r0, r4, lsl #2
- 167              		.loc 7 57 19 discriminator 2 view .LVU31
+ 167              		.loc 7 80 19 discriminator 2 view .LVU31
  168 003e 03EB8403 		add	r3, r3, r4, lsl #2
  169              	.LBE188:
-  53:oscillator.cpp ****     {
- 170              		.loc 7 53 5 discriminator 2 view .LVU32
+  76:oscillator.cpp ****     {
+ 170              		.loc 7 76 5 discriminator 2 view .LVU32
  171 0042 0134     		adds	r4, r4, #1
  172              	.LVL9:
  173              	.LBB189:
-  56:oscillator.cpp ****         out[0][i] = mixed;
- 174              		.loc 7 56 19 discriminator 2 view .LVU33
+  79:oscillator.cpp ****         out[0][i] = mixed;
+ 174              		.loc 7 79 19 discriminator 2 view .LVU33
  175 0044 80ED000A 		vstr.32	s0, [r0]
- 176              		.loc 7 57 9 is_stmt 1 discriminator 2 view .LVU34
+ 176              		.loc 7 80 9 is_stmt 1 discriminator 2 view .LVU34
  177              	.LBE189:
-ARM GAS  /tmp/cc29Sbe2.s 			page 12
-
-
-  53:oscillator.cpp ****     {
- 178              		.loc 7 53 25 is_stmt 0 discriminator 2 view .LVU35
+  76:oscillator.cpp ****     {
+ 178              		.loc 7 76 25 is_stmt 0 discriminator 2 view .LVU35
  179 0048 A642     		cmp	r6, r4
  180              	.LBB190:
- 181              		.loc 7 57 19 discriminator 2 view .LVU36
+ 181              		.loc 7 80 19 discriminator 2 view .LVU36
  182 004a 83ED000A 		vstr.32	s0, [r3]
  183              	.LBE190:
-  53:oscillator.cpp ****     {
- 184              		.loc 7 53 5 is_stmt 1 discriminator 2 view .LVU37
+  76:oscillator.cpp ****     {
+ 184              		.loc 7 76 5 is_stmt 1 discriminator 2 view .LVU37
  185              	.LVL10:
-  53:oscillator.cpp ****     {
- 186              		.loc 7 53 25 discriminator 2 view .LVU38
+  76:oscillator.cpp ****     {
+ 186              		.loc 7 76 25 discriminator 2 view .LVU38
  187 004e DED1     		bne	.L6
  188              	.LBE192:
-  58:oscillator.cpp ****     }
-  59:oscillator.cpp **** }
- 189              		.loc 7 59 1 is_stmt 0 view .LVU39
+  81:oscillator.cpp ****     }
+  82:oscillator.cpp **** }
+ 189              		.loc 7 82 1 is_stmt 0 view .LVU39
  190 0050 BDEC028B 		vldm	sp!, {d8}
  191              		.cfi_restore 80
  192              		.cfi_restore 81
@@ -690,11 +713,14 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  199              		.cfi_restore 5
  200              		.cfi_restore 6
  201              		.cfi_restore 14
- 202              		.loc 7 59 1 view .LVU40
+ 202              		.loc 7 82 1 view .LVU40
  203 0056 7047     		bx	lr
  204              	.L16:
  205              		.align	2
  206              	.L15:
+ARM GAS  /tmp/ccdA0TMp.s 			page 13
+
+
  207 0058 00000000 		.word	.LANCHOR0
  208 005c 00000000 		.word	.LANCHOR1
  209 0060 00000000 		.word	.LANCHOR2
@@ -718,9 +744,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   28:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
   29:../../../DaisySP/Source/Synthesis/oscillator.h ****         WAVE_SIN,
   30:../../../DaisySP/Source/Synthesis/oscillator.h ****         WAVE_TRI,
-ARM GAS  /tmp/cc29Sbe2.s 			page 13
-
-
   31:../../../DaisySP/Source/Synthesis/oscillator.h ****         WAVE_SAW,
   32:../../../DaisySP/Source/Synthesis/oscillator.h ****         WAVE_RAMP,
   33:../../../DaisySP/Source/Synthesis/oscillator.h ****         WAVE_SQUARE,
@@ -755,6 +778,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   54:../../../DaisySP/Source/Synthesis/oscillator.h ****         freq_      = 100.0f;
   55:../../../DaisySP/Source/Synthesis/oscillator.h ****         amp_       = 0.5f;
  233              		.loc 1 55 20 view .LVU44
+ARM GAS  /tmp/ccdA0TMp.s 			page 14
+
+
  234 0004 4FF07C53 		mov	r3, #1056964608
   53:../../../DaisySP/Source/Synthesis/oscillator.h ****         sr_recip_  = 1.0f / sample_rate;
  235              		.loc 1 53 27 view .LVU45
@@ -778,9 +804,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  247 0018 C360     		str	r3, [r0, #12]	@ float
  248              		.loc 1 57 20 view .LVU51
  249 001a 8261     		str	r2, [r0, #24]	@ float
-ARM GAS  /tmp/cc29Sbe2.s 			page 14
-
-
   52:../../../DaisySP/Source/Synthesis/oscillator.h ****         sr_recip_  = 1.0f / sample_rate;
  250              		.loc 1 52 20 view .LVU52
  251 001c C0ED047A 		vstr.32	s15, [r0, #16]
@@ -815,6 +838,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  271              	.LVL14:
   59:../../../DaisySP/Source/Synthesis/oscillator.h ****         waveform_  = WAVE_SIN;
  272              		.loc 1 59 20 view .LVU64
+ARM GAS  /tmp/ccdA0TMp.s 			page 15
+
+
  273 0030 0022     		movs	r2, #0
   60:../../../DaisySP/Source/Synthesis/oscillator.h ****         eoc_       = true;
   61:../../../DaisySP/Source/Synthesis/oscillator.h ****         eor_       = true;
@@ -838,9 +864,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  286 003e 10BD     		pop	{r4, pc}
  287              	.LVL15:
  288              	.L20:
-ARM GAS  /tmp/cc29Sbe2.s 			page 15
-
-
  289              		.loc 1 62 5 view .LVU73
  290              		.align	2
  291              	.L19:
@@ -875,6 +898,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  319              		.loc 7 30 1 is_stmt 0 view .LVU76
  320 000a 7047     		bx	lr
  321              	.L22:
+ARM GAS  /tmp/ccdA0TMp.s 			page 16
+
+
   27:oscillator.cpp ****         case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
  322              		.loc 7 27 9 is_stmt 1 view .LVU77
   27:oscillator.cpp ****         case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
@@ -898,9 +924,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     inline void SetAmp(const float a) { amp_ = a; }
   77:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
   78:../../../DaisySP/Source/Synthesis/oscillator.h ****     */
-ARM GAS  /tmp/cc29Sbe2.s 			page 16
-
-
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     inline void SetWaveform(const uint8_t wf)
  327              		.loc 1 79 17 view .LVU79
  328              	.LBB200:
@@ -935,6 +958,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  349 0014 0370     		strb	r3, [r0]
  350              		.loc 1 82 5 view .LVU89
  351 0016 7047     		bx	lr
+ARM GAS  /tmp/ccdA0TMp.s 			page 17
+
+
  352              	.LVL19:
  353              	.L23:
  354              		.loc 1 82 5 view .LVU90
@@ -958,9 +984,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  367              	.LVL20:
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  368              		.loc 1 81 19 view .LVU96
-ARM GAS  /tmp/cc29Sbe2.s 			page 17
-
-
  369              	.LBE204:
  370              	.LBE203:
   30:oscillator.cpp **** 
@@ -995,14 +1018,17 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   33:oscillator.cpp ****     // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
  396              		.loc 7 33 34 is_stmt 0 view .LVU103
  397 0000 B0EE406A 		vmov.f32	s12, s0
+ARM GAS  /tmp/ccdA0TMp.s 			page 18
+
+
   40:oscillator.cpp ****     
  398              		.loc 7 40 11 view .LVU104
  399 0004 DFED0C6A 		vldr.32	s13, .L28
  400 0008 F3EE087A 		vmov.f32	s15, #2.4e+1
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  401              		.loc 7 46 42 view .LVU105
  402 000c 9FED0B7A 		vldr.32	s14, .L28+4
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  403              		.loc 7 46 25 view .LVU106
  404 0010 F2EE080A 		vmov.f32	s1, #1.2e+1
  405 0014 B0EE000A 		vmov.f32	s0, #2.0e+0
@@ -1018,30 +1044,27 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  412 001c 08B5     		push	{r3, lr}
  413              		.cfi_def_cfa_offset 8
  414              		.cfi_offset 3, -8
-ARM GAS  /tmp/cc29Sbe2.s 			page 18
-
-
  415              		.cfi_offset 14, -4
   43:oscillator.cpp ****     
  416              		.loc 7 43 22 view .LVU110
  417 001e F8FE677A 		vrinta.f32	s15, s15
  418              	.LVL24:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  419              		.loc 7 46 5 is_stmt 1 view .LVU111
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  420              		.loc 7 46 42 is_stmt 0 view .LVU112
  421 0022 77EEC77A 		vsub.f32	s15, s15, s14
  422              	.LVL25:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  423              		.loc 7 46 25 view .LVU113
  424 0026 C7EEA00A 		vdiv.f32	s1, s15, s1
  425 002a FFF7FEFF 		bl	powf
  426              	.LVL26:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  427              		.loc 7 46 58 view .LVU114
  428 002e DFED047A 		vldr.32	s15, .L28+8
-  47:oscillator.cpp **** 
- 429              		.loc 7 47 1 view .LVU115
+  67:oscillator.cpp **** 
+ 429              		.loc 7 67 1 view .LVU115
  430 0032 20EE270A 		vmul.f32	s0, s0, s15
  431 0036 08BD     		pop	{r3, pc}
  432              	.L29:
@@ -1055,6 +1078,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  441              		.section	.text._Z15UpdateWaveform1v,"ax",%progbits
  442              		.align	1
  443              		.p2align 2,,3
+ARM GAS  /tmp/ccdA0TMp.s 			page 19
+
+
  444              		.global	_Z15UpdateWaveform1v
  445              		.syntax unified
  446              		.thumb
@@ -1062,60 +1088,60 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  448              		.fpu fpv5-d16
  450              	_Z15UpdateWaveform1v:
  451              	.LFB4684:
-  60:oscillator.cpp **** 
-  61:oscillator.cpp **** void UpdateWaveform1()
-  62:oscillator.cpp **** {
- 452              		.loc 7 62 1 is_stmt 1 view -0
+  83:oscillator.cpp **** 
+  84:oscillator.cpp **** void UpdateWaveform1()
+  85:oscillator.cpp **** {
+ 452              		.loc 7 85 1 is_stmt 1 view -0
  453              		.cfi_startproc
  454              		@ args = 0, pretend = 0, frame = 0
  455              		@ frame_needed = 0, uses_anonymous_args = 0
  456              		@ link register save eliminated.
-  63:oscillator.cpp ****     if(currentVoice == 0) {
- 457              		.loc 7 63 5 view .LVU117
- 458              		.loc 7 63 21 is_stmt 0 view .LVU118
+  86:oscillator.cpp ****     if(currentVoice == 0) {
+ 457              		.loc 7 86 5 view .LVU117
+ 458              		.loc 7 86 21 is_stmt 0 view .LVU118
  459 0000 084B     		ldr	r3, .L34
- 460              		.loc 7 63 5 view .LVU119
+ 460              		.loc 7 86 5 view .LVU119
  461 0002 1B68     		ldr	r3, [r3]
  462 0004 63B9     		cbnz	r3, .L31
  463              	.LBB207:
-ARM GAS  /tmp/cc29Sbe2.s 			page 19
-
-
  464              	.LBI207:
-  61:oscillator.cpp **** {
- 465              		.loc 7 61 6 is_stmt 1 view .LVU120
+  84:oscillator.cpp **** {
+ 465              		.loc 7 84 6 is_stmt 1 view .LVU120
  466              	.LBB208:
-  64:oscillator.cpp ****         voice1.wave1 = (voice1.wave1 + 1) % 3;
- 467              		.loc 7 64 9 view .LVU121
- 468              		.loc 7 64 22 is_stmt 0 view .LVU122
+  87:oscillator.cpp ****         voice1.wave1 = (voice1.wave1 + 1) % 3;
+ 467              		.loc 7 87 9 view .LVU121
+ 468              		.loc 7 87 22 is_stmt 0 view .LVU122
  469 0006 0849     		ldr	r1, .L34+4
  470              	.L33:
  471              	.LBE208:
  472              	.LBE207:
-  65:oscillator.cpp ****     } else {
-  66:oscillator.cpp ****         voice2.wave1 = (voice2.wave1 + 1) % 3;
- 473              		.loc 7 66 38 view .LVU123
+  88:oscillator.cpp ****     } else {
+  89:oscillator.cpp ****         voice2.wave1 = (voice2.wave1 + 1) % 3;
+ 473              		.loc 7 89 38 view .LVU123
  474 0008 8A69     		ldr	r2, [r1, #24]
- 475              		.loc 7 66 43 view .LVU124
+ 475              		.loc 7 89 43 view .LVU124
  476 000a 084B     		ldr	r3, .L34+8
- 477              		.loc 7 66 38 view .LVU125
+ 477              		.loc 7 89 38 view .LVU125
  478 000c 0132     		adds	r2, r2, #1
- 479              		.loc 7 66 43 view .LVU126
+ 479              		.loc 7 89 43 view .LVU126
  480 000e 83FB0203 		smull	r0, r3, r3, r2
  481 0012 A3EBE273 		sub	r3, r3, r2, asr #31
  482 0016 03EB4303 		add	r3, r3, r3, lsl #1
  483 001a D31A     		subs	r3, r2, r3
- 484              		.loc 7 66 22 view .LVU127
+ 484              		.loc 7 89 22 view .LVU127
  485 001c 8B61     		str	r3, [r1, #24]
-  67:oscillator.cpp ****     }
-  68:oscillator.cpp **** }
- 486              		.loc 7 68 1 view .LVU128
+  90:oscillator.cpp ****     }
+  91:oscillator.cpp **** }
+ 486              		.loc 7 91 1 view .LVU128
  487 001e 7047     		bx	lr
  488              	.L31:
-  66:oscillator.cpp ****     }
- 489              		.loc 7 66 9 is_stmt 1 view .LVU129
-  66:oscillator.cpp ****     }
- 490              		.loc 7 66 22 is_stmt 0 view .LVU130
+  89:oscillator.cpp ****     }
+ 489              		.loc 7 89 9 is_stmt 1 view .LVU129
+  89:oscillator.cpp ****     }
+ARM GAS  /tmp/ccdA0TMp.s 			page 20
+
+
+ 490              		.loc 7 89 22 is_stmt 0 view .LVU130
  491 0020 0349     		ldr	r1, .L34+12
  492 0022 F1E7     		b	.L33
  493              	.L35:
@@ -1137,60 +1163,60 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  510              		.fpu fpv5-d16
  512              	_Z15UpdateWaveform2v:
  513              	.LFB4685:
-  69:oscillator.cpp **** 
-ARM GAS  /tmp/cc29Sbe2.s 			page 20
-
-
-  70:oscillator.cpp **** void UpdateWaveform2()
-  71:oscillator.cpp **** {
- 514              		.loc 7 71 1 is_stmt 1 view -0
+  92:oscillator.cpp **** 
+  93:oscillator.cpp **** void UpdateWaveform2()
+  94:oscillator.cpp **** {
+ 514              		.loc 7 94 1 is_stmt 1 view -0
  515              		.cfi_startproc
  516              		@ args = 0, pretend = 0, frame = 0
  517              		@ frame_needed = 0, uses_anonymous_args = 0
  518              		@ link register save eliminated.
-  72:oscillator.cpp ****     if(currentVoice == 0) {
- 519              		.loc 7 72 5 view .LVU132
- 520              		.loc 7 72 21 is_stmt 0 view .LVU133
+  95:oscillator.cpp ****     if(currentVoice == 0) {
+ 519              		.loc 7 95 5 view .LVU132
+ 520              		.loc 7 95 21 is_stmt 0 view .LVU133
  521 0000 084B     		ldr	r3, .L40
- 522              		.loc 7 72 5 view .LVU134
+ 522              		.loc 7 95 5 view .LVU134
  523 0002 1B68     		ldr	r3, [r3]
  524 0004 63B9     		cbnz	r3, .L37
  525              	.LBB211:
  526              	.LBI211:
-  70:oscillator.cpp **** {
- 527              		.loc 7 70 6 is_stmt 1 view .LVU135
+  93:oscillator.cpp **** {
+ 527              		.loc 7 93 6 is_stmt 1 view .LVU135
  528              	.LBB212:
-  73:oscillator.cpp ****         voice1.wave2 = (voice1.wave2 + 1) % 3;
- 529              		.loc 7 73 9 view .LVU136
- 530              		.loc 7 73 22 is_stmt 0 view .LVU137
+  96:oscillator.cpp ****         voice1.wave2 = (voice1.wave2 + 1) % 3;
+ 529              		.loc 7 96 9 view .LVU136
+ 530              		.loc 7 96 22 is_stmt 0 view .LVU137
  531 0006 0849     		ldr	r1, .L40+4
  532              	.L39:
  533              	.LBE212:
  534              	.LBE211:
-  74:oscillator.cpp ****     } else {
-  75:oscillator.cpp ****         voice2.wave2 = (voice2.wave2 + 1) % 3;
- 535              		.loc 7 75 38 view .LVU138
+  97:oscillator.cpp ****     } else {
+  98:oscillator.cpp ****         voice2.wave2 = (voice2.wave2 + 1) % 3;
+ 535              		.loc 7 98 38 view .LVU138
  536 0008 CA69     		ldr	r2, [r1, #28]
- 537              		.loc 7 75 43 view .LVU139
+ 537              		.loc 7 98 43 view .LVU139
  538 000a 084B     		ldr	r3, .L40+8
- 539              		.loc 7 75 38 view .LVU140
+ 539              		.loc 7 98 38 view .LVU140
  540 000c 0132     		adds	r2, r2, #1
- 541              		.loc 7 75 43 view .LVU141
+ARM GAS  /tmp/ccdA0TMp.s 			page 21
+
+
+ 541              		.loc 7 98 43 view .LVU141
  542 000e 83FB0203 		smull	r0, r3, r3, r2
  543 0012 A3EBE273 		sub	r3, r3, r2, asr #31
  544 0016 03EB4303 		add	r3, r3, r3, lsl #1
  545 001a D31A     		subs	r3, r2, r3
- 546              		.loc 7 75 22 view .LVU142
+ 546              		.loc 7 98 22 view .LVU142
  547 001c CB61     		str	r3, [r1, #28]
-  76:oscillator.cpp ****     }
-  77:oscillator.cpp **** }
- 548              		.loc 7 77 1 view .LVU143
+  99:oscillator.cpp ****     }
+ 100:oscillator.cpp **** }
+ 548              		.loc 7 100 1 view .LVU143
  549 001e 7047     		bx	lr
  550              	.L37:
-  75:oscillator.cpp ****     }
- 551              		.loc 7 75 9 is_stmt 1 view .LVU144
-  75:oscillator.cpp ****     }
- 552              		.loc 7 75 22 is_stmt 0 view .LVU145
+  98:oscillator.cpp ****     }
+ 551              		.loc 7 98 9 is_stmt 1 view .LVU144
+  98:oscillator.cpp ****     }
+ 552              		.loc 7 98 22 is_stmt 0 view .LVU145
  553 0020 0349     		ldr	r1, .L40+12
  554 0022 F1E7     		b	.L39
  555              	.L41:
@@ -1198,9 +1224,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  557              	.L40:
  558 0024 00000000 		.word	.LANCHOR4
  559 0028 00000000 		.word	.LANCHOR5
-ARM GAS  /tmp/cc29Sbe2.s 			page 21
-
-
  560 002c 56555555 		.word	1431655766
  561 0030 00000000 		.word	.LANCHOR6
  562              		.cfi_endproc
@@ -1215,17 +1238,17 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  572              		.fpu fpv5-d16
  574              	main:
  575              	.LFB4686:
-  78:oscillator.cpp **** 
-  79:oscillator.cpp **** int main(void)
-  80:oscillator.cpp **** {
- 576              		.loc 7 80 1 is_stmt 1 view -0
+ 101:oscillator.cpp **** 
+ 102:oscillator.cpp **** int main(void)
+ 103:oscillator.cpp **** {
+ 576              		.loc 7 103 1 is_stmt 1 view -0
  577              		.cfi_startproc
  578              		@ args = 0, pretend = 0, frame = 96
  579              		@ frame_needed = 0, uses_anonymous_args = 0
-  81:oscillator.cpp ****     hw.Configure();
- 580              		.loc 7 81 5 view .LVU147
-  80:oscillator.cpp ****     hw.Configure();
- 581              		.loc 7 80 1 is_stmt 0 view .LVU148
+ 104:oscillator.cpp ****     hw.Configure();
+ 580              		.loc 7 104 5 view .LVU147
+ 103:oscillator.cpp ****     hw.Configure();
+ 581              		.loc 7 103 1 is_stmt 0 view .LVU148
  582 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
  583              		.cfi_def_cfa_offset 36
  584              		.cfi_offset 4, -36
@@ -1235,82 +1258,85 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  588              		.cfi_offset 8, -20
  589              		.cfi_offset 9, -16
  590              		.cfi_offset 10, -12
+ARM GAS  /tmp/ccdA0TMp.s 			page 22
+
+
  591              		.cfi_offset 11, -8
  592              		.cfi_offset 14, -4
- 593              		.loc 7 81 17 view .LVU149
+ 593              		.loc 7 104 17 view .LVU149
  594 0004 6148     		ldr	r0, .L80
-  80:oscillator.cpp ****     hw.Configure();
- 595              		.loc 7 80 1 view .LVU150
+ 103:oscillator.cpp ****     hw.Configure();
+ 595              		.loc 7 103 1 view .LVU150
  596 0006 9BB0     		sub	sp, sp, #108
  597              		.cfi_def_cfa_offset 144
- 598              		.loc 7 81 17 view .LVU151
+ 598              		.loc 7 104 17 view .LVU151
  599 0008 FFF7FEFF 		bl	_ZN5daisy9DaisySeed9ConfigureEv
  600              	.LVL27:
-  82:oscillator.cpp ****     hw.Init();
- 601              		.loc 7 82 5 is_stmt 1 view .LVU152
- 602              		.loc 7 82 12 is_stmt 0 view .LVU153
+ 105:oscillator.cpp ****     hw.Init();
+ 601              		.loc 7 105 5 is_stmt 1 view .LVU152
+ 602              		.loc 7 105 12 is_stmt 0 view .LVU153
  603 000c 0021     		movs	r1, #0
  604 000e 5F48     		ldr	r0, .L80
  605 0010 FFF7FEFF 		bl	_ZN5daisy9DaisySeed4InitEb
  606              	.LVL28:
-  83:oscillator.cpp ****     hw.SetAudioBlockSize(4);
- 607              		.loc 7 83 5 is_stmt 1 view .LVU154
- 608              		.loc 7 83 25 is_stmt 0 view .LVU155
+ 106:oscillator.cpp ****     hw.SetAudioBlockSize(4);
+ 607              		.loc 7 106 5 is_stmt 1 view .LVU154
+ 608              		.loc 7 106 25 is_stmt 0 view .LVU155
  609 0014 0421     		movs	r1, #4
  610 0016 5D48     		ldr	r0, .L80
-ARM GAS  /tmp/cc29Sbe2.s 			page 22
-
-
  611 0018 FFF7FEFF 		bl	_ZN5daisy9DaisySeed17SetAudioBlockSizeEj
  612              	.LVL29:
-  84:oscillator.cpp **** 
-  85:oscillator.cpp ****     // Initialize all oscillators
-  86:oscillator.cpp ****     osc1.Init(hw.AudioSampleRate());
- 613              		.loc 7 86 5 is_stmt 1 view .LVU156
- 614              		.loc 7 86 14 is_stmt 0 view .LVU157
+ 107:oscillator.cpp **** 
+ 108:oscillator.cpp ****     // Initialize all oscillators
+ 109:oscillator.cpp ****     osc1.Init(hw.AudioSampleRate());
+ 613              		.loc 7 109 5 is_stmt 1 view .LVU156
+ 614              		.loc 7 109 14 is_stmt 0 view .LVU157
  615 001c 5B48     		ldr	r0, .L80
  616 001e FFF7FEFF 		bl	_ZN5daisy9DaisySeed15AudioSampleRateEv
  617              	.LVL30:
  618 0022 5B48     		ldr	r0, .L80+4
  619 0024 FFF7FEFF 		bl	_ZN7daisysp10Oscillator4InitEf
  620              	.LVL31:
-  87:oscillator.cpp ****     osc2.Init(hw.AudioSampleRate());
- 621              		.loc 7 87 5 is_stmt 1 view .LVU158
- 622              		.loc 7 87 14 is_stmt 0 view .LVU159
+ 110:oscillator.cpp ****     osc2.Init(hw.AudioSampleRate());
+ 621              		.loc 7 110 5 is_stmt 1 view .LVU158
+ 622              		.loc 7 110 14 is_stmt 0 view .LVU159
  623 0028 5848     		ldr	r0, .L80
  624 002a FFF7FEFF 		bl	_ZN5daisy9DaisySeed15AudioSampleRateEv
  625              	.LVL32:
  626 002e 5948     		ldr	r0, .L80+8
  627 0030 FFF7FEFF 		bl	_ZN7daisysp10Oscillator4InitEf
  628              	.LVL33:
-  88:oscillator.cpp ****     osc3.Init(hw.AudioSampleRate());
- 629              		.loc 7 88 5 is_stmt 1 view .LVU160
- 630              		.loc 7 88 14 is_stmt 0 view .LVU161
+ 111:oscillator.cpp ****     osc3.Init(hw.AudioSampleRate());
+ 629              		.loc 7 111 5 is_stmt 1 view .LVU160
+ 630              		.loc 7 111 14 is_stmt 0 view .LVU161
  631 0034 5548     		ldr	r0, .L80
  632 0036 FFF7FEFF 		bl	_ZN5daisy9DaisySeed15AudioSampleRateEv
  633              	.LVL34:
  634 003a 5748     		ldr	r0, .L80+12
  635 003c FFF7FEFF 		bl	_ZN7daisysp10Oscillator4InitEf
  636              	.LVL35:
-  89:oscillator.cpp ****     osc4.Init(hw.AudioSampleRate());
- 637              		.loc 7 89 5 is_stmt 1 view .LVU162
- 638              		.loc 7 89 14 is_stmt 0 view .LVU163
+ 112:oscillator.cpp ****     osc4.Init(hw.AudioSampleRate());
+ 637              		.loc 7 112 5 is_stmt 1 view .LVU162
+ 638              		.loc 7 112 14 is_stmt 0 view .LVU163
+ARM GAS  /tmp/ccdA0TMp.s 			page 23
+
+
  639 0040 5248     		ldr	r0, .L80
  640 0042 FFF7FEFF 		bl	_ZN5daisy9DaisySeed15AudioSampleRateEv
  641              	.LVL36:
  642 0046 5548     		ldr	r0, .L80+16
  643 0048 FFF7FEFF 		bl	_ZN7daisysp10Oscillator4InitEf
  644              	.LVL37:
-  90:oscillator.cpp ****     
-  91:oscillator.cpp ****     // Initialize voice parameters
-  92:oscillator.cpp ****     voice1 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
- 645              		.loc 7 92 5 is_stmt 1 view .LVU164
- 646              		.loc 7 92 12 is_stmt 0 view .LVU165
+ 113:oscillator.cpp ****     
+ 114:oscillator.cpp ****     // Initialize voice parameters
+ 115:oscillator.cpp ****     voice1 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
+ 645              		.loc 7 115 5 is_stmt 1 view .LVU164
+ 646              		.loc 7 115 12 is_stmt 0 view .LVU165
  647 004c 544D     		ldr	r5, .L80+20
  648 004e DFF884C1 		ldr	ip, .L80+72
  649 0052 2E46     		mov	r6, r5
-  93:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
- 650              		.loc 7 93 12 view .LVU166
+ 116:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
+ 650              		.loc 7 116 12 view .LVU166
  651 0054 534C     		ldr	r4, .L80+24
  652 0056 DFF880B1 		ldr	fp, .L80+76
  653 005a A646     		mov	lr, r4
@@ -1318,32 +1344,29 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  655 0060 4C4F     		ldr	r7, .L80+8
  656 0062 DFF834A1 		ldr	r10, .L80+12
  657 0066 DFF87491 		ldr	r9, .L80+80
-ARM GAS  /tmp/cc29Sbe2.s 			page 23
-
-
-  92:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
- 658              		.loc 7 92 12 view .LVU167
+ 115:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
+ 658              		.loc 7 115 12 view .LVU167
  659 006a BCE80F00 		ldmia	ip!, {r0, r1, r2, r3}
  660 006e 0FC6     		stmia	r6!, {r0, r1, r2, r3}
- 661              		.loc 7 93 12 view .LVU168
+ 661              		.loc 7 116 12 view .LVU168
  662 0070 ACF11002 		sub	r2, ip, #16
  663 0074 0392     		str	r2, [sp, #12]
-  92:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
- 664              		.loc 7 92 12 view .LVU169
+ 115:oscillator.cpp ****     voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
+ 664              		.loc 7 115 12 view .LVU169
  665 0076 9CE80F00 		ldm	ip, {r0, r1, r2, r3}
  666 007a 86E80F00 		stm	r6, {r0, r1, r2, r3}
- 667              		.loc 7 93 5 is_stmt 1 view .LVU170
- 668              		.loc 7 93 12 is_stmt 0 view .LVU171
+ 667              		.loc 7 116 5 is_stmt 1 view .LVU170
+ 668              		.loc 7 116 12 is_stmt 0 view .LVU171
  669 007e 039A     		ldr	r2, [sp, #12]
  670 0080 1646     		mov	r6, r2
  671 0082 0FCE     		ldmia	r6!, {r0, r1, r2, r3}
  672 0084 AEE80F00 		stmia	lr!, {r0, r1, r2, r3}
  673 0088 9CE80F00 		ldm	ip, {r0, r1, r2, r3}
  674 008c 8EE80F00 		stm	lr, {r0, r1, r2, r3}
-  94:oscillator.cpp **** 
-  95:oscillator.cpp ****     // Initialize buttons
-  96:oscillator.cpp ****     GPIO buttonWave1, buttonWave2, buttonVoice;
- 675              		.loc 7 96 5 is_stmt 1 view .LVU172
+ 117:oscillator.cpp **** 
+ 118:oscillator.cpp ****     // Initialize buttons
+ 119:oscillator.cpp ****     GPIO buttonWave1, buttonWave2, buttonVoice;
+ 675              		.loc 7 119 5 is_stmt 1 view .LVU172
  676              	.LVL38:
  677              	.LBB330:
  678              	.LBI330:
@@ -1355,6 +1378,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    5:../../../libDaisy/src/per/gpio.h **** 
    6:../../../libDaisy/src/per/gpio.h **** #ifdef __cplusplus
    7:../../../libDaisy/src/per/gpio.h **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 24
+
+
    8:../../../libDaisy/src/per/gpio.h **** namespace daisy
    9:../../../libDaisy/src/per/gpio.h **** {
   10:../../../libDaisy/src/per/gpio.h **** /** @brief General Purpose I/O control 
@@ -1378,9 +1404,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   28:../../../libDaisy/src/per/gpio.h ****         OUTPUT,    /**< Output w/ push-pull configuration */
   29:../../../libDaisy/src/per/gpio.h ****         OUTPUT_OD, /**< Output w/ open-drain configuration */
   30:../../../libDaisy/src/per/gpio.h ****         ANALOG,    /**< Analog for connection to ADC or DAC peripheral */
-ARM GAS  /tmp/cc29Sbe2.s 			page 24
-
-
   31:../../../libDaisy/src/per/gpio.h ****     };
   32:../../../libDaisy/src/per/gpio.h **** 
   33:../../../libDaisy/src/per/gpio.h ****     /** @brief Configures whether an internal Pull up or Pull down resistor is used. 
@@ -1415,6 +1438,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   62:../../../libDaisy/src/per/gpio.h ****         Pull  pull;
   63:../../../libDaisy/src/per/gpio.h ****         Speed speed;
   64:../../../libDaisy/src/per/gpio.h **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 25
+
+
   65:../../../libDaisy/src/per/gpio.h ****         /** Constructor with no arguments will prepare an invalid GPIO set as
   66:../../../libDaisy/src/per/gpio.h ****          *  an input, with no pullup. 
   67:../../../libDaisy/src/per/gpio.h ****          */
@@ -1438,9 +1464,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  689              		.file 9 "../../../libDaisy/src/daisy_core.h"
    1:../../../libDaisy/src/daisy_core.h **** #pragma once
    2:../../../libDaisy/src/daisy_core.h **** #ifndef DSY_CORE_HW_H
-ARM GAS  /tmp/cc29Sbe2.s 			page 25
-
-
    3:../../../libDaisy/src/daisy_core.h **** #define DSY_CORE_HW_H /**< & */
    4:../../../libDaisy/src/daisy_core.h **** #include <stdint.h>
    5:../../../libDaisy/src/daisy_core.h **** #include <stdlib.h>
@@ -1475,6 +1498,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   34:../../../libDaisy/src/daisy_core.h **** #define FBIPMIN (-FBIPMAX)            /**< - (1 - LSB) */
   35:../../../libDaisy/src/daisy_core.h **** #define U82F_SCALE 0.0078740f         /**< 1 / 127 */
   36:../../../libDaisy/src/daisy_core.h **** #define F2U8_SCALE 127.0f             /**< 128 - 1 */
+ARM GAS  /tmp/ccdA0TMp.s 			page 26
+
+
   37:../../../libDaisy/src/daisy_core.h **** #define S82F_SCALE 0.0078125f         /**< 1 / (2**7) */
   38:../../../libDaisy/src/daisy_core.h **** #define F2S8_SCALE 127.0f             /**< (2 ** 7) - 1 */
   39:../../../libDaisy/src/daisy_core.h **** #define S162F_SCALE 3.0517578125e-05f /**< 1 / (2** 15) */
@@ -1498,9 +1524,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   57:../../../libDaisy/src/daisy_core.h ****  *  channel of a non-interleaved input buffer named in */
   58:../../../libDaisy/src/daisy_core.h **** #define IN_L in[0]
   59:../../../libDaisy/src/daisy_core.h **** 
-ARM GAS  /tmp/cc29Sbe2.s 			page 26
-
-
   60:../../../libDaisy/src/daisy_core.h **** /** shorthand macro for simplifying the reading of the right 
   61:../../../libDaisy/src/daisy_core.h ****  *  channel of a non-interleaved input buffer named in */
   62:../../../libDaisy/src/daisy_core.h **** #define IN_R in[1]
@@ -1535,6 +1558,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   91:../../../libDaisy/src/daisy_core.h ****     return (uint8_t)((x * F2U8_SCALE) + F2U8_SCALE);
   92:../../../libDaisy/src/daisy_core.h **** }
   93:../../../libDaisy/src/daisy_core.h **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 27
+
+
   94:../../../libDaisy/src/daisy_core.h **** 
   95:../../../libDaisy/src/daisy_core.h **** /** 
   96:../../../libDaisy/src/daisy_core.h ****     Converts Signed 8-bit to float
@@ -1558,9 +1584,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  114:../../../libDaisy/src/daisy_core.h **** 
  115:../../../libDaisy/src/daisy_core.h **** /** 
  116:../../../libDaisy/src/daisy_core.h ****     Converts Signed 16-bit to float
-ARM GAS  /tmp/cc29Sbe2.s 			page 27
-
-
  117:../../../libDaisy/src/daisy_core.h ****     \param x Number to be scaled.
  118:../../../libDaisy/src/daisy_core.h ****     \return Scaled number.
  119:../../../libDaisy/src/daisy_core.h **** */
@@ -1595,6 +1618,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  148:../../../libDaisy/src/daisy_core.h ****     x = x <= FBIPMIN ? FBIPMIN : x;
  149:../../../libDaisy/src/daisy_core.h ****     x = x >= FBIPMAX ? FBIPMAX : x;
  150:../../../libDaisy/src/daisy_core.h ****     return (int32_t)(x * F2S24_SCALE);
+ARM GAS  /tmp/ccdA0TMp.s 			page 28
+
+
  151:../../../libDaisy/src/daisy_core.h **** }
  152:../../../libDaisy/src/daisy_core.h **** 
  153:../../../libDaisy/src/daisy_core.h **** /**
@@ -1618,9 +1644,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  171:../../../libDaisy/src/daisy_core.h **** /** Enums and a simple struct for defining a hardware pin on the MCU
  172:../../../libDaisy/src/daisy_core.h ****  *  These correlate with the stm32 datasheet, and are used to configure
  173:../../../libDaisy/src/daisy_core.h ****  *  the hardware.
-ARM GAS  /tmp/cc29Sbe2.s 			page 28
-
-
  174:../../../libDaisy/src/daisy_core.h ****  * 
  175:../../../libDaisy/src/daisy_core.h ****  *  This along with the dsy_gpio_pin class should no longer be used.
  176:../../../libDaisy/src/daisy_core.h ****  *  They are available for backwards compatability. 
@@ -1655,6 +1678,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  205:../../../libDaisy/src/daisy_core.h **** {
  206:../../../libDaisy/src/daisy_core.h ****     dsy_gpio_port port; /**< & */
  207:../../../libDaisy/src/daisy_core.h ****     uint8_t       pin;  /**< number 0-15 */
+ARM GAS  /tmp/ccdA0TMp.s 			page 29
+
+
  208:../../../libDaisy/src/daisy_core.h **** } dsy_gpio_pin;
  209:../../../libDaisy/src/daisy_core.h **** 
  210:../../../libDaisy/src/daisy_core.h **** /** Helper for creating pins from port/pin combos easily
@@ -1678,9 +1704,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  228:../../../libDaisy/src/daisy_core.h ****  *  The dsy_gpio_pin struct should no longer be used, and is only available for
  229:../../../libDaisy/src/daisy_core.h ****  *  backwards compatability.
  230:../../../libDaisy/src/daisy_core.h ****  * 
-ARM GAS  /tmp/cc29Sbe2.s 			page 29
-
-
  231:../../../libDaisy/src/daisy_core.h ****  *  Please use Pin struct instead.
  232:../../../libDaisy/src/daisy_core.h ****  */
  233:../../../libDaisy/src/daisy_core.h **** FORCE_INLINE uint8_t dsy_pin_cmp(dsy_gpio_pin *a, dsy_gpio_pin *b)
@@ -1715,6 +1738,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  262:../../../libDaisy/src/daisy_core.h ****     GPIOPort port;
  263:../../../libDaisy/src/daisy_core.h ****     uint8_t  pin;
  264:../../../libDaisy/src/daisy_core.h **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 30
+
+
  265:../../../libDaisy/src/daisy_core.h ****     /** @brief Constructor creates a valid pin. 
  266:../../../libDaisy/src/daisy_core.h ****      *  @param pt GPIOPort between PA, and PK corresponding to STM32 Port.
  267:../../../libDaisy/src/daisy_core.h ****      *  @param pn pin number in range of 0-15
@@ -1733,21 +1759,18 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  697 0090 4FF60B73 		movw	r3, #65291
  698              	.LBE331:
  699              	.LBE330:
-  97:oscillator.cpp ****     buttonWave1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 700              		.loc 7 97 21 view .LVU178
+ 120:oscillator.cpp ****     buttonWave1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 700              		.loc 7 120 21 view .LVU178
  701 0094 0BA8     		add	r0, sp, #44
  702              	.LVL39:
- 703              		.loc 7 97 21 view .LVU179
-ARM GAS  /tmp/cc29Sbe2.s 			page 30
-
-
+ 703              		.loc 7 120 21 view .LVU179
  704 0096 0022     		movs	r2, #0
-  98:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
-  99:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 100:oscillator.cpp **** 
- 101:oscillator.cpp ****     // Configure ADC
- 102:oscillator.cpp ****     adcConfig[0].InitSingle(A0);
- 705              		.loc 7 102 28 view .LVU180
+ 121:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 122:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 123:oscillator.cpp **** 
+ 124:oscillator.cpp ****     // Configure ADC
+ 125:oscillator.cpp ****     adcConfig[0].InitSingle(A0);
+ 705              		.loc 7 125 28 view .LVU180
  706 0098 4FF00006 		mov	r6, #0
  707              	.LBB345:
  708              	.LBB342:
@@ -1755,8 +1778,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  710 009c 0B93     		str	r3, [sp, #44]
  711              	.LBE342:
  712              	.LBE345:
-  97:oscillator.cpp ****     buttonWave1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 713              		.loc 7 97 21 view .LVU182
+ 120:oscillator.cpp ****     buttonWave1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 713              		.loc 7 120 21 view .LVU182
  714 009e 424B     		ldr	r3, .L80+28
  715 00a0 1968     		ldr	r1, [r3]
  716 00a2 0023     		movs	r3, #0
@@ -1775,6 +1798,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  727              	.LBE336:
  728              	.LBE338:
  729              	.LBE340:
+ARM GAS  /tmp/ccdA0TMp.s 			page 31
+
+
  730              	.LBE343:
  731              	.LBE346:
  732              	.LBB347:
@@ -1798,9 +1824,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  749              	.LBE348:
  750              	.LBE347:
  751              	.LBB358:
-ARM GAS  /tmp/cc29Sbe2.s 			page 31
-
-
  752              	.LBB344:
  753              	.LBB341:
  754              	.LBB339:
@@ -1835,6 +1858,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  781 00b4 0023     		movs	r3, #0
  782 00b6 CDE91133 		strd	r3, r3, [sp, #68]
  783 00ba 1393     		str	r3, [sp, #76]
+ARM GAS  /tmp/ccdA0TMp.s 			page 32
+
+
  784              	.LVL41:
   69:../../../libDaisy/src/per/gpio.h ****         {
  785              		.loc 8 69 73 view .LVU192
@@ -1858,9 +1884,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  802              		.loc 9 272 15 view .LVU195
  803              		.loc 9 272 15 is_stmt 0 view .LVU196
  804              	.LBE365:
-ARM GAS  /tmp/cc29Sbe2.s 			page 32
-
-
   69:../../../libDaisy/src/per/gpio.h ****         {
  805              		.loc 8 69 73 view .LVU197
  806 00bc 1893     		str	r3, [sp, #96]
@@ -1872,8 +1895,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  811              	.LBE362:
  812              	.LBE369:
  813              	.LBE372:
-  97:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 814              		.loc 7 97 5 is_stmt 1 view .LVU199
+ 120:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 814              		.loc 7 120 5 is_stmt 1 view .LVU199
  815              	.LBB373:
  816              	.LBB370:
  817              	.LBB368:
@@ -1887,15 +1910,18 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  824              	.LBE368:
  825              	.LBE370:
  826              	.LBE373:
-  97:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 827              		.loc 7 97 21 view .LVU201
+ 120:oscillator.cpp ****     buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 827              		.loc 7 120 21 view .LVU201
  828 00c2 0123     		movs	r3, #1
  829 00c4 FFF7FEFF 		bl	_ZN5daisy4GPIO4InitENS_3PinENS0_4ModeENS0_4PullENS0_5SpeedE
  830              	.LVL43:
-  98:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 831              		.loc 7 98 5 is_stmt 1 view .LVU202
-  98:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
- 832              		.loc 7 98 21 is_stmt 0 view .LVU203
+ 121:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ 831              		.loc 7 121 5 is_stmt 1 view .LVU202
+ 121:oscillator.cpp ****     buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+ARM GAS  /tmp/ccdA0TMp.s 			page 33
+
+
+ 832              		.loc 7 121 21 is_stmt 0 view .LVU203
  833 00c8 0023     		movs	r3, #0
  834 00ca 10A8     		add	r0, sp, #64
  835 00cc 0022     		movs	r2, #0
@@ -1905,10 +1931,10 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  839 00d4 0123     		movs	r3, #1
  840 00d6 FFF7FEFF 		bl	_ZN5daisy4GPIO4InitENS_3PinENS0_4ModeENS0_4PullENS0_5SpeedE
  841              	.LVL44:
-  99:oscillator.cpp **** 
- 842              		.loc 7 99 5 is_stmt 1 view .LVU204
-  99:oscillator.cpp **** 
- 843              		.loc 7 99 21 is_stmt 0 view .LVU205
+ 122:oscillator.cpp **** 
+ 842              		.loc 7 122 5 is_stmt 1 view .LVU204
+ 122:oscillator.cpp **** 
+ 843              		.loc 7 122 21 is_stmt 0 view .LVU205
  844 00da 0023     		movs	r3, #0
  845 00dc 15A8     		add	r0, sp, #84
  846 00de 0022     		movs	r2, #0
@@ -1918,11 +1944,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  850 00e6 0123     		movs	r3, #1
  851 00e8 FFF7FEFF 		bl	_ZN5daisy4GPIO4InitENS_3PinENS0_4ModeENS0_4PullENS0_5SpeedE
  852              	.LVL45:
-ARM GAS  /tmp/cc29Sbe2.s 			page 33
-
-
- 853              		.loc 7 102 5 is_stmt 1 view .LVU206
- 854              		.loc 7 102 28 is_stmt 0 view .LVU207
+ 853              		.loc 7 125 5 is_stmt 1 view .LVU206
+ 854              		.loc 7 125 28 is_stmt 0 view .LVU207
  855 00ec 4FF00203 		mov	r3, #2
  856 00f0 8DF81560 		strb	r6, [sp, #21]
  857 00f4 0222     		movs	r2, #2
@@ -1931,9 +1954,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  860 00fc 2D48     		ldr	r0, .L80+40
  861 00fe FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  862              	.LVL46:
- 103:oscillator.cpp ****     adcConfig[1].InitSingle(A1);
- 863              		.loc 7 103 5 is_stmt 1 view .LVU208
- 864              		.loc 7 103 28 is_stmt 0 view .LVU209
+ 126:oscillator.cpp ****     adcConfig[1].InitSingle(A1);
+ 863              		.loc 7 126 5 is_stmt 1 view .LVU208
+ 864              		.loc 7 126 28 is_stmt 0 view .LVU209
  865 0102 0323     		movs	r3, #3
  866 0104 8DF81860 		strb	r6, [sp, #24]
  867 0108 0222     		movs	r2, #2
@@ -1942,9 +1965,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  870 0110 2948     		ldr	r0, .L80+44
  871 0112 FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  872              	.LVL47:
- 104:oscillator.cpp ****     adcConfig[2].InitSingle(A2);
- 873              		.loc 7 104 5 is_stmt 1 view .LVU210
- 874              		.loc 7 104 28 is_stmt 0 view .LVU211
+ 127:oscillator.cpp ****     adcConfig[2].InitSingle(A2);
+ 873              		.loc 7 127 5 is_stmt 1 view .LVU210
+ 874              		.loc 7 127 28 is_stmt 0 view .LVU211
  875 0116 4FF00103 		mov	r3, #1
  876 011a 0222     		movs	r2, #2
  877 011c 2748     		ldr	r0, .L80+48
@@ -1953,9 +1976,12 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  880 0126 0799     		ldr	r1, [sp, #28]
  881 0128 FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  882              	.LVL48:
- 105:oscillator.cpp ****     adcConfig[3].InitSingle(A3);
- 883              		.loc 7 105 5 is_stmt 1 view .LVU212
- 884              		.loc 7 105 28 is_stmt 0 view .LVU213
+ 128:oscillator.cpp ****     adcConfig[3].InitSingle(A3);
+ 883              		.loc 7 128 5 is_stmt 1 view .LVU212
+ARM GAS  /tmp/ccdA0TMp.s 			page 34
+
+
+ 884              		.loc 7 128 28 is_stmt 0 view .LVU213
  885 012c 0723     		movs	r3, #7
  886 012e 8DF82060 		strb	r6, [sp, #32]
  887 0132 0222     		movs	r2, #2
@@ -1964,9 +1990,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  890 013a 2148     		ldr	r0, .L80+52
  891 013c FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  892              	.LVL49:
- 106:oscillator.cpp ****     adcConfig[4].InitSingle(A4);
- 893              		.loc 7 106 5 is_stmt 1 view .LVU214
- 894              		.loc 7 106 28 is_stmt 0 view .LVU215
+ 129:oscillator.cpp ****     adcConfig[4].InitSingle(A4);
+ 893              		.loc 7 129 5 is_stmt 1 view .LVU214
+ 894              		.loc 7 129 28 is_stmt 0 view .LVU215
  895 0140 4FF00602 		mov	r2, #6
  896 0144 8DF82460 		strb	r6, [sp, #36]
  897 0148 8DF82520 		strb	r2, [sp, #37]
@@ -1975,12 +2001,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  900 0150 1C48     		ldr	r0, .L80+56
  901 0152 FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  902              	.LVL50:
- 107:oscillator.cpp ****     adcConfig[5].InitSingle(A5);
- 903              		.loc 7 107 5 is_stmt 1 view .LVU216
- 904              		.loc 7 107 28 is_stmt 0 view .LVU217
-ARM GAS  /tmp/cc29Sbe2.s 			page 34
-
-
+ 130:oscillator.cpp ****     adcConfig[5].InitSingle(A5);
+ 903              		.loc 7 130 5 is_stmt 1 view .LVU216
+ 904              		.loc 7 130 28 is_stmt 0 view .LVU217
  905 0156 4FF00103 		mov	r3, #1
  906 015a 0222     		movs	r2, #2
  907 015c 1A48     		ldr	r0, .L80+60
@@ -1990,31 +2013,34 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  911 016a 0A99     		ldr	r1, [sp, #40]
  912 016c FFF7FEFF 		bl	_ZN5daisy16AdcChannelConfig10InitSingleE12dsy_gpio_pinNS0_15ConversionSpeedE
  913              	.LVL51:
- 108:oscillator.cpp ****     hw.adc.Init(adcConfig, 6);
- 914              		.loc 7 108 5 is_stmt 1 view .LVU218
- 915              		.loc 7 108 16 is_stmt 0 view .LVU219
+ 131:oscillator.cpp ****     hw.adc.Init(adcConfig, 6);
+ 914              		.loc 7 131 5 is_stmt 1 view .LVU218
+ 915              		.loc 7 131 16 is_stmt 0 view .LVU219
  916 0170 0622     		movs	r2, #6
  917 0172 0423     		movs	r3, #4
  918 0174 0F49     		ldr	r1, .L80+40
  919 0176 1548     		ldr	r0, .L80+64
  920 0178 FFF7FEFF 		bl	_ZN5daisy9AdcHandle4InitEPNS_16AdcChannelConfigEjNS0_12OverSamplingE
  921              	.LVL52:
- 109:oscillator.cpp ****     hw.adc.Start();
- 922              		.loc 7 109 5 is_stmt 1 view .LVU220
- 923              		.loc 7 109 17 is_stmt 0 view .LVU221
+ 132:oscillator.cpp ****     hw.adc.Start();
+ 922              		.loc 7 132 5 is_stmt 1 view .LVU220
+ 923              		.loc 7 132 17 is_stmt 0 view .LVU221
  924 017c 1348     		ldr	r0, .L80+64
  925 017e FFF7FEFF 		bl	_ZN5daisy9AdcHandle5StartEv
  926              	.LVL53:
- 110:oscillator.cpp **** 
- 111:oscillator.cpp ****     hw.StartAudio(AudioCallback);
- 927              		.loc 7 111 5 is_stmt 1 view .LVU222
- 928              		.loc 7 111 18 is_stmt 0 view .LVU223
+ 133:oscillator.cpp **** 
+ 134:oscillator.cpp ****     hw.StartAudio(AudioCallback);
+ 927              		.loc 7 134 5 is_stmt 1 view .LVU222
+ 928              		.loc 7 134 18 is_stmt 0 view .LVU223
  929 0182 1349     		ldr	r1, .L80+68
  930 0184 0148     		ldr	r0, .L80
  931 0186 FFF7FEFF 		bl	_ZN5daisy9DaisySeed10StartAudioEPFvPKPKfPPfjE
  932              	.LVL54:
  933 018a 63E1     		b	.L62
  934              	.L81:
+ARM GAS  /tmp/ccdA0TMp.s 			page 35
+
+
  935              		.align	2
  936              	.L80:
  937 018c 00000000 		.word	.LANCHOR7
@@ -2038,95 +2064,92 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  955 01d4 00000000 		.word	.LANCHOR8
  956 01d8 00000000 		.word	.LANCHOR4
  957 01dc 00000000 		.word	.LANCHOR15
-ARM GAS  /tmp/cc29Sbe2.s 			page 35
-
-
  958              	.L79:
  959              	.LBB374:
- 112:oscillator.cpp **** 
- 113:oscillator.cpp ****     while(1)
- 114:oscillator.cpp ****     {
- 115:oscillator.cpp ****         // Update current voice parameters from pots
- 116:oscillator.cpp ****         if(currentVoice == 0) {
- 117:oscillator.cpp ****             voice1.vol1 = hw.adc.GetFloat(0);
- 960              		.loc 7 117 13 is_stmt 1 view .LVU224
- 961              		.loc 7 117 42 is_stmt 0 view .LVU225
+ 135:oscillator.cpp **** 
+ 136:oscillator.cpp ****     while(1)
+ 137:oscillator.cpp ****     {
+ 138:oscillator.cpp ****         // Update current voice parameters from pots
+ 139:oscillator.cpp ****         if(currentVoice == 0) {
+ 140:oscillator.cpp ****             voice1.vol1 = hw.adc.GetFloat(0);
+ 960              		.loc 7 140 13 is_stmt 1 view .LVU224
+ 961              		.loc 7 140 42 is_stmt 0 view .LVU225
  962 01e0 CF48     		ldr	r0, .L82
  963 01e2 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  964              	.LVL55:
- 118:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
- 965              		.loc 7 118 44 view .LVU226
+ 141:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
+ 965              		.loc 7 141 44 view .LVU226
  966 01e6 0121     		movs	r1, #1
  967 01e8 CD48     		ldr	r0, .L82
- 117:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
- 968              		.loc 7 117 25 view .LVU227
+ 140:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
+ 968              		.loc 7 140 25 view .LVU227
  969 01ea 85ED000A 		vstr.32	s0, [r5]
- 970              		.loc 7 118 13 is_stmt 1 view .LVU228
- 971              		.loc 7 118 44 is_stmt 0 view .LVU229
+ 970              		.loc 7 141 13 is_stmt 1 view .LVU228
+ 971              		.loc 7 141 44 is_stmt 0 view .LVU229
  972 01ee FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  973              	.LVL56:
- 119:oscillator.cpp ****             voice1.pw1 = hw.adc.GetFloat(2);
- 974              		.loc 7 119 41 view .LVU230
+ 142:oscillator.cpp ****             voice1.pw1 = hw.adc.GetFloat(2);
+ 974              		.loc 7 142 41 view .LVU230
  975 01f2 0221     		movs	r1, #2
  976 01f4 CA48     		ldr	r0, .L82
- 118:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
- 977              		.loc 7 118 27 view .LVU231
+ 141:oscillator.cpp ****             voice1.pitch1 = hw.adc.GetFloat(1);
+ 977              		.loc 7 141 27 view .LVU231
  978 01f6 85ED020A 		vstr.32	s0, [r5, #8]
- 979              		.loc 7 119 13 is_stmt 1 view .LVU232
- 980              		.loc 7 119 41 is_stmt 0 view .LVU233
+ 979              		.loc 7 142 13 is_stmt 1 view .LVU232
+ 980              		.loc 7 142 41 is_stmt 0 view .LVU233
  981 01fa FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
+ARM GAS  /tmp/ccdA0TMp.s 			page 36
+
+
  982              	.LVL57:
- 120:oscillator.cpp ****             voice1.vol2 = hw.adc.GetFloat(3);
- 983              		.loc 7 120 42 view .LVU234
+ 143:oscillator.cpp ****             voice1.vol2 = hw.adc.GetFloat(3);
+ 983              		.loc 7 143 42 view .LVU234
  984 01fe 0321     		movs	r1, #3
  985 0200 C748     		ldr	r0, .L82
- 119:oscillator.cpp ****             voice1.pw1 = hw.adc.GetFloat(2);
- 986              		.loc 7 119 24 view .LVU235
+ 142:oscillator.cpp ****             voice1.pw1 = hw.adc.GetFloat(2);
+ 986              		.loc 7 142 24 view .LVU235
  987 0202 85ED040A 		vstr.32	s0, [r5, #16]
- 988              		.loc 7 120 13 is_stmt 1 view .LVU236
- 989              		.loc 7 120 42 is_stmt 0 view .LVU237
+ 988              		.loc 7 143 13 is_stmt 1 view .LVU236
+ 989              		.loc 7 143 42 is_stmt 0 view .LVU237
  990 0206 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  991              	.LVL58:
- 121:oscillator.cpp ****             voice1.pitch2 = hw.adc.GetFloat(4);
- 992              		.loc 7 121 44 view .LVU238
+ 144:oscillator.cpp ****             voice1.pitch2 = hw.adc.GetFloat(4);
+ 992              		.loc 7 144 44 view .LVU238
  993 020a 0421     		movs	r1, #4
  994 020c C448     		ldr	r0, .L82
- 120:oscillator.cpp ****             voice1.vol2 = hw.adc.GetFloat(3);
- 995              		.loc 7 120 25 view .LVU239
+ 143:oscillator.cpp ****             voice1.vol2 = hw.adc.GetFloat(3);
+ 995              		.loc 7 143 25 view .LVU239
  996 020e 85ED010A 		vstr.32	s0, [r5, #4]
- 997              		.loc 7 121 13 is_stmt 1 view .LVU240
- 998              		.loc 7 121 44 is_stmt 0 view .LVU241
+ 997              		.loc 7 144 13 is_stmt 1 view .LVU240
+ 998              		.loc 7 144 44 is_stmt 0 view .LVU241
  999 0212 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  1000              	.LVL59:
-ARM GAS  /tmp/cc29Sbe2.s 			page 36
-
-
- 122:oscillator.cpp ****             voice1.pw2 = hw.adc.GetFloat(5);
- 1001              		.loc 7 122 41 view .LVU242
+ 145:oscillator.cpp ****             voice1.pw2 = hw.adc.GetFloat(5);
+ 1001              		.loc 7 145 41 view .LVU242
  1002 0216 0521     		movs	r1, #5
  1003 0218 C148     		ldr	r0, .L82
- 121:oscillator.cpp ****             voice1.pitch2 = hw.adc.GetFloat(4);
- 1004              		.loc 7 121 27 view .LVU243
+ 144:oscillator.cpp ****             voice1.pitch2 = hw.adc.GetFloat(4);
+ 1004              		.loc 7 144 27 view .LVU243
  1005 021a 85ED030A 		vstr.32	s0, [r5, #12]
- 1006              		.loc 7 122 13 is_stmt 1 view .LVU244
- 1007              		.loc 7 122 41 is_stmt 0 view .LVU245
+ 1006              		.loc 7 145 13 is_stmt 1 view .LVU244
+ 1007              		.loc 7 145 41 is_stmt 0 view .LVU245
  1008 021e FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  1009              	.LVL60:
- 1010              		.loc 7 122 24 view .LVU246
+ 1010              		.loc 7 145 24 view .LVU246
  1011 0222 85ED050A 		vstr.32	s0, [r5, #20]
  1012              	.L44:
- 123:oscillator.cpp ****         } else {
- 124:oscillator.cpp ****             voice2.vol1 = hw.adc.GetFloat(0);
- 125:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
- 126:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
- 127:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
- 128:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
- 129:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
- 130:oscillator.cpp ****         }
- 131:oscillator.cpp **** 
- 132:oscillator.cpp ****         // Voice 1 oscillators (with quantized pitch)
- 133:oscillator.cpp ****         osc1.SetFreq(QuantizePitch(voice1.pitch1));
- 1013              		.loc 7 133 9 is_stmt 1 view .LVU247
+ 146:oscillator.cpp ****         } else {
+ 147:oscillator.cpp ****             voice2.vol1 = hw.adc.GetFloat(0);
+ 148:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
+ 149:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
+ 150:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
+ 151:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
+ 152:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
+ 153:oscillator.cpp ****         }
+ 154:oscillator.cpp **** 
+ 155:oscillator.cpp ****         // Voice 1 oscillators (with quantized pitch)
+ 156:oscillator.cpp ****         osc1.SetFreq(QuantizePitch(voice1.pitch1));
+ 1013              		.loc 7 156 9 is_stmt 1 view .LVU247
  1014              	.LVL61:
  1015              	.LBB375:
  1016              	.LBI375:
@@ -2135,6 +2158,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1018              	.LBB376:
   35:oscillator.cpp ****     const float maxNote = 108.0f;
  1019              		.loc 7 35 5 view .LVU249
+ARM GAS  /tmp/ccdA0TMp.s 			page 37
+
+
   36:oscillator.cpp ****     const float range = maxNote - minNote;
  1020              		.loc 7 36 5 view .LVU250
   37:oscillator.cpp ****     
@@ -2146,21 +2172,18 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1024 0226 F3EE087A 		vmov.f32	s15, #2.4e+1
  1025 022a DFEDBE6A 		vldr.32	s13, .L82+4
  1026 022e 95ED026A 		vldr.32	s12, [r5, #8]
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1027              		.loc 7 46 25 view .LVU254
  1028 0232 F2EE080A 		vmov.f32	s1, #1.2e+1
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1029              		.loc 7 46 42 view .LVU255
  1030 0236 9FEDBC7A 		vldr.32	s14, .L82+8
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1031              		.loc 7 46 25 view .LVU256
  1032 023a B0EE000A 		vmov.f32	s0, #2.0e+0
   40:oscillator.cpp ****     
  1033              		.loc 7 40 11 view .LVU257
  1034 023e E6EE267A 		vfma.f32	s15, s12, s13
-ARM GAS  /tmp/cc29Sbe2.s 			page 37
-
-
  1035              	.LVL62:
   43:oscillator.cpp ****     
  1036              		.loc 7 43 5 is_stmt 1 view .LVU258
@@ -2168,18 +2191,18 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1037              		.loc 7 43 22 is_stmt 0 view .LVU259
  1038 0242 F8FE677A 		vrinta.f32	s15, s15
  1039              	.LVL63:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1040              		.loc 7 46 5 is_stmt 1 view .LVU260
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1041              		.loc 7 46 42 is_stmt 0 view .LVU261
  1042 0246 77EEC77A 		vsub.f32	s15, s15, s14
  1043              	.LVL64:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1044              		.loc 7 46 25 view .LVU262
  1045 024a C7EEA00A 		vdiv.f32	s1, s15, s1
  1046 024e FFF7FEFF 		bl	powf
  1047              	.LVL65:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1048              		.loc 7 46 58 view .LVU263
  1049 0252 DFEDB67A 		vldr.32	s15, .L82+12
  1050              	.LBE376:
@@ -2193,11 +2216,14 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1057              	.LBE378:
  1058              	.LBB382:
  1059              	.LBB377:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1060              		.loc 7 46 58 view .LVU265
+ARM GAS  /tmp/ccdA0TMp.s 			page 38
+
+
  1061 0258 20EE270A 		vmul.f32	s0, s0, s15
  1062              	.LVL66:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1063              		.loc 7 46 58 view .LVU266
  1064              	.LBE377:
  1065              	.LBE382:
@@ -2218,9 +2244,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1075 0260 FFF7FEFF 		bl	_ZN7daisysp10Oscillator12CalcPhaseIncEf
  1076              	.LVL67:
   70:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
-ARM GAS  /tmp/cc29Sbe2.s 			page 38
-
-
  1077              		.loc 1 70 34 view .LVU272
  1078              	.LBE380:
  1079              	.LBE383:
@@ -2255,6 +2278,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   16:../../../DaisySP/Source/Utility/dsp.h **** #include <random>
   17:../../../DaisySP/Source/Utility/dsp.h **** #include <cmath>
   18:../../../DaisySP/Source/Utility/dsp.h **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 39
+
+
   19:../../../DaisySP/Source/Utility/dsp.h **** /** PIs
   20:../../../DaisySP/Source/Utility/dsp.h **** */
   21:../../../DaisySP/Source/Utility/dsp.h **** #define PI_F 3.1415927410125732421875f
@@ -2278,9 +2304,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   39:../../../DaisySP/Source/Utility/dsp.h **** */
   40:../../../DaisySP/Source/Utility/dsp.h **** inline float fmax(float a, float b)
   41:../../../DaisySP/Source/Utility/dsp.h **** {
-ARM GAS  /tmp/cc29Sbe2.s 			page 39
-
-
   42:../../../DaisySP/Source/Utility/dsp.h ****     float r;
   43:../../../DaisySP/Source/Utility/dsp.h **** #ifdef __arm__
   44:../../../DaisySP/Source/Utility/dsp.h ****     asm("vmaxnm.f32 %[d], %[n], %[m]" : [d] "=t"(r) : [n] "t"(a), [m] "t"(b) :);
@@ -2315,11 +2338,14 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1107              		.loc 1 76 46 view .LVU276
  1108 026e C8F80430 		str	r3, [r8, #4]	@ float
  1109              	.LBE386:
+ARM GAS  /tmp/ccdA0TMp.s 			page 40
+
+
  1110              	.LBE414:
- 134:oscillator.cpp ****         osc1.SetAmp(voice1.vol1);
- 135:oscillator.cpp ****         osc1.SetPw(voice1.pw1);
- 136:oscillator.cpp ****         SetOscWaveform(osc1, voice1.wave1);
- 1111              		.loc 7 136 23 view .LVU277
+ 157:oscillator.cpp ****         osc1.SetAmp(voice1.vol1);
+ 158:oscillator.cpp ****         osc1.SetPw(voice1.pw1);
+ 159:oscillator.cpp ****         SetOscWaveform(osc1, voice1.wave1);
+ 1111              		.loc 7 159 23 view .LVU277
  1112 0272 AB69     		ldr	r3, [r5, #24]
  1113              	.LBB415:
  1114              	.LBB409:
@@ -2338,9 +2364,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1126              	.LBB417:
   25:oscillator.cpp ****         case 0: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
  1127              		.loc 7 25 5 view .LVU279
-ARM GAS  /tmp/cc29Sbe2.s 			page 40
-
-
  1128 0278 012B     		cmp	r3, #1
  1129              	.LBE417:
  1130              	.LBE416:
@@ -2354,8 +2377,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1136              		.loc 1 70 20 view .LVU281
  1137              	.LBE381:
  1138              	.LBE428:
- 134:oscillator.cpp ****         osc1.SetAmp(voice1.vol1);
- 1139              		.loc 7 134 9 is_stmt 1 view .LVU282
+ 157:oscillator.cpp ****         osc1.SetAmp(voice1.vol1);
+ 1139              		.loc 7 157 9 is_stmt 1 view .LVU282
  1140              	.LBB429:
  1141              	.LBI384:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
@@ -2375,6 +2398,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1153              		.syntax unified
  1154              	@ 44 "../../../DaisySP/Source/Utility/dsp.h" 1
  1155 027e C7FEA67A 		vmaxnm.f32 s15, s15, s13
+ARM GAS  /tmp/ccdA0TMp.s 			page 41
+
+
  1156              	@ 0 "" 2
  1157              		.thumb
  1158              		.syntax unified
@@ -2396,11 +2422,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1174              	.LBE406:
  1175              	.LBE410:
  1176              	.LBE430:
- 135:oscillator.cpp ****         SetOscWaveform(osc1, voice1.wave1);
- 1177              		.loc 7 135 9 is_stmt 1 view .LVU288
-ARM GAS  /tmp/cc29Sbe2.s 			page 41
-
-
+ 158:oscillator.cpp ****         SetOscWaveform(osc1, voice1.wave1);
+ 1177              		.loc 7 158 9 is_stmt 1 view .LVU288
  1178              	.LBB431:
  1179              	.LBI388:
   83:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the pulse width for WAVE_SQUARE and WAVE_POLYBLEP_SQUARE (range 0 - 1)
@@ -2435,6 +2458,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1195              	.LBB403:
  1196              	.LBI395:
   40:../../../DaisySP/Source/Utility/dsp.h **** {
+ARM GAS  /tmp/ccdA0TMp.s 			page 42
+
+
  1197              		.loc 10 40 14 view .LVU293
  1198              	.LBB399:
   42:../../../DaisySP/Source/Utility/dsp.h **** #ifdef __arm__
@@ -2458,9 +2484,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1210              		.loc 10 55 5 view .LVU300
   59:../../../DaisySP/Source/Utility/dsp.h **** }
  1211              		.loc 10 59 5 view .LVU301
-ARM GAS  /tmp/cc29Sbe2.s 			page 42
-
-
   59:../../../DaisySP/Source/Utility/dsp.h **** }
  1212              		.loc 10 59 5 is_stmt 0 view .LVU302
  1213              	.LBE394:
@@ -2468,7 +2491,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1215              	.LBE408:
  1216              	.LBE412:
  1217              	.LBE432:
- 1218              		.loc 7 136 9 is_stmt 1 view .LVU303
+ 1218              		.loc 7 159 9 is_stmt 1 view .LVU303
  1219              	.LBB433:
  1220              	.LBI416:
   24:oscillator.cpp ****     switch(index) {
@@ -2495,13 +2518,16 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1239 0296 00F02F81 		beq	.L73
  1240              	.LVL70:
  1241              	.L47:
+ARM GAS  /tmp/ccdA0TMp.s 			page 43
+
+
   25:oscillator.cpp ****         case 0: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
  1242              		.loc 7 25 5 view .LVU308
  1243              	.LBE425:
  1244              	.LBE435:
- 137:oscillator.cpp ****         
- 138:oscillator.cpp ****         osc2.SetFreq(QuantizePitch(voice1.pitch2));
- 1245              		.loc 7 138 9 is_stmt 1 view .LVU309
+ 160:oscillator.cpp ****         
+ 161:oscillator.cpp ****         osc2.SetFreq(QuantizePitch(voice1.pitch2));
+ 1245              		.loc 7 161 9 is_stmt 1 view .LVU309
  1246              	.LBB436:
  1247              	.LBI436:
   33:oscillator.cpp ****     // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
@@ -2518,18 +2544,15 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   40:oscillator.cpp ****     
  1254              		.loc 7 40 11 is_stmt 0 view .LVU315
  1255 029a F3EE087A 		vmov.f32	s15, #2.4e+1
-ARM GAS  /tmp/cc29Sbe2.s 			page 43
-
-
  1256 029e DFEDA16A 		vldr.32	s13, .L82+4
  1257 02a2 95ED036A 		vldr.32	s12, [r5, #12]
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1258              		.loc 7 46 25 view .LVU316
  1259 02a6 F2EE080A 		vmov.f32	s1, #1.2e+1
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1260              		.loc 7 46 42 view .LVU317
  1261 02aa 9FED9F7A 		vldr.32	s14, .L82+8
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1262              		.loc 7 46 25 view .LVU318
  1263 02ae B0EE000A 		vmov.f32	s0, #2.0e+0
   40:oscillator.cpp ****     
@@ -2542,19 +2565,22 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1268              		.loc 7 43 22 is_stmt 0 view .LVU321
  1269 02b6 F8FE677A 		vrinta.f32	s15, s15
  1270              	.LVL72:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1271              		.loc 7 46 5 is_stmt 1 view .LVU322
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1272              		.loc 7 46 42 is_stmt 0 view .LVU323
  1273 02ba 77EEC77A 		vsub.f32	s15, s15, s14
  1274              	.LVL73:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1275              		.loc 7 46 25 view .LVU324
  1276 02be C7EEA00A 		vdiv.f32	s1, s15, s1
  1277 02c2 FFF7FEFF 		bl	powf
  1278              	.LVL74:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1279              		.loc 7 46 58 view .LVU325
+ARM GAS  /tmp/ccdA0TMp.s 			page 44
+
+
  1280 02c6 DFED997A 		vldr.32	s15, .L82+12
  1281              	.LBE437:
  1282              	.LBE436:
@@ -2567,20 +2593,17 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1288              	.LBE439:
  1289              	.LBB443:
  1290              	.LBB438:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1291              		.loc 7 46 58 view .LVU327
  1292 02cc 20EE270A 		vmul.f32	s0, s0, s15
  1293              	.LVL75:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1294              		.loc 7 46 58 view .LVU328
  1295              	.LBE438:
  1296              	.LBE443:
  1297              	.LBB444:
  1298              	.LBI439:
   67:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
-ARM GAS  /tmp/cc29Sbe2.s 			page 44
-
-
  1299              		.loc 1 67 17 is_stmt 1 view .LVU329
  1300              	.LBB441:
   69:../../../DaisySP/Source/Synthesis/oscillator.h ****         phase_inc_ = CalcPhaseInc(f);
@@ -2615,6 +2638,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1323 02da B7EE007A 		vmov.f32	s14, #1.0e+0
  1324              	.LBE453:
  1325              	.LBE452:
+ARM GAS  /tmp/ccdA0TMp.s 			page 45
+
+
  1326              	.LBB456:
  1327              	.LBB457:
   44:../../../DaisySP/Source/Utility/dsp.h **** #else
@@ -2632,15 +2658,12 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1338 02e2 7B60     		str	r3, [r7, #4]	@ float
  1339              	.LBE447:
  1340              	.LBE475:
- 139:oscillator.cpp ****         osc2.SetAmp(voice1.vol2);
- 140:oscillator.cpp ****         osc2.SetPw(voice1.pw2);
- 141:oscillator.cpp ****         SetOscWaveform(osc2, voice1.wave2);
- 1341              		.loc 7 141 23 view .LVU339
+ 162:oscillator.cpp ****         osc2.SetAmp(voice1.vol2);
+ 163:oscillator.cpp ****         osc2.SetPw(voice1.pw2);
+ 164:oscillator.cpp ****         SetOscWaveform(osc2, voice1.wave2);
+ 1341              		.loc 7 164 23 view .LVU339
  1342 02e4 EB69     		ldr	r3, [r5, #28]
  1343              	.LBB476:
-ARM GAS  /tmp/cc29Sbe2.s 			page 45
-
-
  1344              	.LBB470:
  1345              	.LBB466:
  1346              	.LBB461:
@@ -2670,11 +2693,14 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1366              		.loc 1 70 20 view .LVU343
  1367              	.LBE442:
  1368              	.LBE488:
- 139:oscillator.cpp ****         osc2.SetAmp(voice1.vol2);
- 1369              		.loc 7 139 9 is_stmt 1 view .LVU344
+ 162:oscillator.cpp ****         osc2.SetAmp(voice1.vol2);
+ 1369              		.loc 7 162 9 is_stmt 1 view .LVU344
  1370              	.LBB489:
  1371              	.LBI445:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
+ARM GAS  /tmp/ccdA0TMp.s 			page 46
+
+
  1372              		.loc 1 76 17 view .LVU345
  1373              	.LBB448:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
@@ -2698,9 +2724,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1390              	.LBE462:
  1391              	.LBB463:
  1392              	.LBB454:
-ARM GAS  /tmp/cc29Sbe2.s 			page 46
-
-
   55:../../../DaisySP/Source/Utility/dsp.h **** #else
  1393              		.loc 10 55 5 view .LVU348
  1394              		.syntax unified
@@ -2717,8 +2740,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1404              	.LBE467:
  1405              	.LBE471:
  1406              	.LBE490:
- 140:oscillator.cpp ****         SetOscWaveform(osc2, voice1.wave2);
- 1407              		.loc 7 140 9 is_stmt 1 view .LVU350
+ 163:oscillator.cpp ****         SetOscWaveform(osc2, voice1.wave2);
+ 1407              		.loc 7 163 9 is_stmt 1 view .LVU350
  1408              	.LBB491:
  1409              	.LBI449:
  1410              		.loc 1 85 17 view .LVU351
@@ -2735,6 +2758,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1420              		.loc 10 66 5 view .LVU354
  1421              	.LBB638:
  1422              	.LBB492:
+ARM GAS  /tmp/ccdA0TMp.s 			page 47
+
+
  1423              	.LBB473:
  1424              	.LBB469:
  1425              	.LBB464:
@@ -2758,9 +2784,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1437              		.loc 10 51 14 is_stmt 1 view .LVU360
  1438              	.LBB455:
   53:../../../DaisySP/Source/Utility/dsp.h **** #ifdef __arm__
-ARM GAS  /tmp/cc29Sbe2.s 			page 47
-
-
  1439              		.loc 10 53 5 view .LVU361
   55:../../../DaisySP/Source/Utility/dsp.h **** #else
  1440              		.loc 10 55 5 view .LVU362
@@ -2773,7 +2796,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1445              	.LBE469:
  1446              	.LBE473:
  1447              	.LBE492:
- 1448              		.loc 7 141 9 is_stmt 1 view .LVU365
+ 1448              		.loc 7 164 9 is_stmt 1 view .LVU365
  1449              	.LBB493:
  1450              	.LBI477:
   24:oscillator.cpp ****     switch(index) {
@@ -2795,6 +2818,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1464              		.loc 7 25 5 view .LVU369
  1465 02fc 00F0F980 		beq	.L48
  1466 0300 022B     		cmp	r3, #2
+ARM GAS  /tmp/ccdA0TMp.s 			page 48
+
+
  1467 0302 00F0F380 		beq	.L49
  1468 0306 002B     		cmp	r3, #0
  1469 0308 00F0ED80 		beq	.L74
@@ -2804,10 +2830,10 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1472              		.loc 7 25 5 view .LVU370
  1473              	.LBE486:
  1474              	.LBE495:
- 142:oscillator.cpp ****         
- 143:oscillator.cpp ****         // Voice 2 oscillators (with quantized pitch)
- 144:oscillator.cpp ****         osc3.SetFreq(QuantizePitch(voice2.pitch1));
- 1475              		.loc 7 144 9 is_stmt 1 view .LVU371
+ 165:oscillator.cpp ****         
+ 166:oscillator.cpp ****         // Voice 2 oscillators (with quantized pitch)
+ 167:oscillator.cpp ****         osc3.SetFreq(QuantizePitch(voice2.pitch1));
+ 1475              		.loc 7 167 9 is_stmt 1 view .LVU371
  1476              	.LBB496:
  1477              	.LBI496:
   33:oscillator.cpp ****     // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
@@ -2818,9 +2844,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   36:oscillator.cpp ****     const float range = maxNote - minNote;
  1481              		.loc 7 36 5 view .LVU374
   37:oscillator.cpp ****     
-ARM GAS  /tmp/cc29Sbe2.s 			page 48
-
-
  1482              		.loc 7 37 5 view .LVU375
   40:oscillator.cpp ****     
  1483              		.loc 7 40 5 view .LVU376
@@ -2829,13 +2852,13 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1485 030c F3EE087A 		vmov.f32	s15, #2.4e+1
  1486 0310 DFED846A 		vldr.32	s13, .L82+4
  1487 0314 94ED026A 		vldr.32	s12, [r4, #8]
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1488              		.loc 7 46 25 view .LVU378
  1489 0318 F2EE080A 		vmov.f32	s1, #1.2e+1
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1490              		.loc 7 46 42 view .LVU379
  1491 031c 9FED827A 		vldr.32	s14, .L82+8
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1492              		.loc 7 46 25 view .LVU380
  1493 0320 B0EE000A 		vmov.f32	s0, #2.0e+0
   40:oscillator.cpp ****     
@@ -2848,18 +2871,21 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1498              		.loc 7 43 22 is_stmt 0 view .LVU383
  1499 0328 F8FE677A 		vrinta.f32	s15, s15
  1500              	.LVL81:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1501              		.loc 7 46 5 is_stmt 1 view .LVU384
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1502              		.loc 7 46 42 is_stmt 0 view .LVU385
  1503 032c 77EEC77A 		vsub.f32	s15, s15, s14
  1504              	.LVL82:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
+ARM GAS  /tmp/ccdA0TMp.s 			page 49
+
+
  1505              		.loc 7 46 25 view .LVU386
  1506 0330 C7EEA00A 		vdiv.f32	s1, s15, s1
  1507 0334 FFF7FEFF 		bl	powf
  1508              	.LVL83:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1509              		.loc 7 46 58 view .LVU387
  1510 0338 DFED7C7A 		vldr.32	s15, .L82+12
  1511              	.LBE497:
@@ -2873,14 +2899,11 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1518              	.LBE499:
  1519              	.LBB503:
  1520              	.LBB498:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1521              		.loc 7 46 58 view .LVU389
  1522 033e 20EE270A 		vmul.f32	s0, s0, s15
  1523              	.LVL84:
-  46:oscillator.cpp **** }
-ARM GAS  /tmp/cc29Sbe2.s 			page 49
-
-
+  46:oscillator.cpp **** 
  1524              		.loc 7 46 58 view .LVU390
  1525              	.LBE498:
  1526              	.LBE503:
@@ -2915,6 +2938,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1548              	.LBB510:
  1549              	.LBB511:
  1550              	.LBB512:
+ARM GAS  /tmp/ccdA0TMp.s 			page 50
+
+
  1551              	.LBB513:
   55:../../../DaisySP/Source/Utility/dsp.h **** #else
  1552              		.loc 10 55 5 view .LVU398
@@ -2938,13 +2964,10 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1568 0354 CAF80430 		str	r3, [r10, #4]	@ float
  1569              	.LBE507:
  1570              	.LBE535:
-ARM GAS  /tmp/cc29Sbe2.s 			page 50
-
-
- 145:oscillator.cpp ****         osc3.SetAmp(voice2.vol1);
- 146:oscillator.cpp ****         osc3.SetPw(voice2.pw1);
- 147:oscillator.cpp ****         SetOscWaveform(osc3, voice2.wave1);
- 1571              		.loc 7 147 23 view .LVU401
+ 168:oscillator.cpp ****         osc3.SetAmp(voice2.vol1);
+ 169:oscillator.cpp ****         osc3.SetPw(voice2.pw1);
+ 170:oscillator.cpp ****         SetOscWaveform(osc3, voice2.wave1);
+ 1571              		.loc 7 170 23 view .LVU401
  1572 0358 A369     		ldr	r3, [r4, #24]
  1573              	.LBB536:
  1574              	.LBB530:
@@ -2975,9 +2998,12 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   70:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  1596              		.loc 1 70 20 view .LVU405
  1597              	.LBE502:
+ARM GAS  /tmp/ccdA0TMp.s 			page 51
+
+
  1598              	.LBE548:
- 145:oscillator.cpp ****         osc3.SetAmp(voice2.vol1);
- 1599              		.loc 7 145 9 is_stmt 1 view .LVU406
+ 168:oscillator.cpp ****         osc3.SetAmp(voice2.vol1);
+ 1599              		.loc 7 168 9 is_stmt 1 view .LVU406
  1600              	.LBB549:
  1601              	.LBI505:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
@@ -2998,9 +3024,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1614              	@ 44 "../../../DaisySP/Source/Utility/dsp.h" 1
  1615 0364 C7FEA67A 		vmaxnm.f32 s15, s15, s13
  1616              	@ 0 "" 2
-ARM GAS  /tmp/cc29Sbe2.s 			page 51
-
-
  1617              		.thumb
  1618              		.syntax unified
  1619              	.LBE519:
@@ -3023,8 +3046,8 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1634              	.LBE527:
  1635              	.LBE531:
  1636              	.LBE550:
- 146:oscillator.cpp ****         SetOscWaveform(osc3, voice2.wave1);
- 1637              		.loc 7 146 9 is_stmt 1 view .LVU412
+ 169:oscillator.cpp ****         SetOscWaveform(osc3, voice2.wave1);
+ 1637              		.loc 7 169 9 is_stmt 1 view .LVU412
  1638              	.LBB551:
  1639              	.LBI509:
  1640              		.loc 1 85 17 view .LVU413
@@ -3035,6 +3058,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   64:../../../DaisySP/Source/Utility/dsp.h **** {
  1645              		.loc 10 64 14 view .LVU415
  1646              	.LBE528:
+ARM GAS  /tmp/ccdA0TMp.s 			page 52
+
+
  1647              	.LBE532:
  1648              	.LBE551:
  1649              	.LBE638:
@@ -3058,9 +3084,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1662              		.loc 10 48 5 is_stmt 0 view .LVU421
  1663              	.LBE520:
  1664              	.LBE524:
-ARM GAS  /tmp/cc29Sbe2.s 			page 52
-
-
  1665              	.LBB525:
  1666              	.LBI512:
   51:../../../DaisySP/Source/Utility/dsp.h **** {
@@ -3079,7 +3102,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1675              	.LBE529:
  1676              	.LBE533:
  1677              	.LBE552:
- 1678              		.loc 7 147 9 is_stmt 1 view .LVU427
+ 1678              		.loc 7 170 9 is_stmt 1 view .LVU427
  1679              	.LBB553:
  1680              	.LBI537:
   24:oscillator.cpp ****     switch(index) {
@@ -3095,6 +3118,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1689 036c CAED037A 		vstr.32	s15, [r10, #12]
  1690              	.LBE534:
  1691              	.LBE554:
+ARM GAS  /tmp/ccdA0TMp.s 			page 53
+
+
  1692              	.LBB555:
  1693              	.LBB546:
   25:oscillator.cpp ****         case 0: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
@@ -3110,17 +3136,14 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1702              		.loc 7 25 5 view .LVU432
  1703              	.LBE546:
  1704              	.LBE555:
- 148:oscillator.cpp ****         
- 149:oscillator.cpp ****         osc4.SetFreq(QuantizePitch(voice2.pitch2));
- 1705              		.loc 7 149 9 is_stmt 1 view .LVU433
+ 171:oscillator.cpp ****         
+ 172:oscillator.cpp ****         osc4.SetFreq(QuantizePitch(voice2.pitch2));
+ 1705              		.loc 7 172 9 is_stmt 1 view .LVU433
  1706              	.LBB556:
  1707              	.LBI556:
   33:oscillator.cpp ****     // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
  1708              		.loc 7 33 7 view .LVU434
  1709              	.LBB557:
-ARM GAS  /tmp/cc29Sbe2.s 			page 53
-
-
   35:oscillator.cpp ****     const float maxNote = 108.0f;
  1710              		.loc 7 35 5 view .LVU435
   36:oscillator.cpp ****     const float range = maxNote - minNote;
@@ -3134,13 +3157,13 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1715 0380 F3EE087A 		vmov.f32	s15, #2.4e+1
  1716 0384 DFED676A 		vldr.32	s13, .L82+4
  1717 0388 94ED036A 		vldr.32	s12, [r4, #12]
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1718              		.loc 7 46 25 view .LVU440
  1719 038c F2EE080A 		vmov.f32	s1, #1.2e+1
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1720              		.loc 7 46 42 view .LVU441
  1721 0390 9FED657A 		vldr.32	s14, .L82+8
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1722              		.loc 7 46 25 view .LVU442
  1723 0394 B0EE000A 		vmov.f32	s0, #2.0e+0
   40:oscillator.cpp ****     
@@ -3155,6 +3178,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1731              	.LBB561:
   69:../../../DaisySP/Source/Synthesis/oscillator.h ****         phase_inc_ = CalcPhaseInc(f);
  1732              		.loc 1 69 20 is_stmt 0 view .LVU445
+ARM GAS  /tmp/ccdA0TMp.s 			page 54
+
+
  1733 039c 684E     		ldr	r6, .L82+32
  1734              	.LBE561:
  1735              	.LBE560:
@@ -3164,23 +3190,20 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1738              		.loc 7 43 22 view .LVU446
  1739 039e F8FE677A 		vrinta.f32	s15, s15
  1740              	.LVL90:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1741              		.loc 7 46 5 is_stmt 1 view .LVU447
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1742              		.loc 7 46 42 is_stmt 0 view .LVU448
  1743 03a2 77EEC77A 		vsub.f32	s15, s15, s14
  1744              	.LVL91:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1745              		.loc 7 46 25 view .LVU449
  1746 03a6 C7EEA00A 		vdiv.f32	s1, s15, s1
  1747 03aa FFF7FEFF 		bl	powf
  1748              	.LVL92:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1749              		.loc 7 46 58 view .LVU450
  1750 03ae DFED5F7A 		vldr.32	s15, .L82+12
-ARM GAS  /tmp/cc29Sbe2.s 			page 54
-
-
  1751              	.LBE558:
  1752              	.LBE565:
  1753              	.LBB566:
@@ -3192,11 +3215,11 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1758              	.LBE566:
  1759              	.LBB567:
  1760              	.LBB559:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1761              		.loc 7 46 58 view .LVU452
  1762 03b4 20EE270A 		vmul.f32	s0, s0, s15
  1763              	.LVL93:
-  46:oscillator.cpp **** }
+  46:oscillator.cpp **** 
  1764              		.loc 7 46 58 view .LVU453
  1765              	.LBE559:
  1766              	.LBE567:
@@ -3215,6 +3238,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   70:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  1775              		.loc 1 70 34 is_stmt 0 view .LVU458
  1776 03bc FFF7FEFF 		bl	_ZN7daisysp10Oscillator12CalcPhaseIncEf
+ARM GAS  /tmp/ccdA0TMp.s 			page 55
+
+
  1777              	.LVL94:
   70:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  1778              		.loc 1 70 34 view .LVU459
@@ -3238,9 +3264,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1794              	.LBE577:
  1795              	.LBE576:
  1796              	.LBB580:
-ARM GAS  /tmp/cc29Sbe2.s 			page 55
-
-
  1797              	.LBB581:
   44:../../../DaisySP/Source/Utility/dsp.h **** #else
  1798              		.loc 10 44 5 view .LVU462
@@ -3257,10 +3280,10 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1808 03ca 7360     		str	r3, [r6, #4]	@ float
  1809              	.LBE571:
  1810              	.LBE599:
- 150:oscillator.cpp ****         osc4.SetAmp(voice2.vol2);
- 151:oscillator.cpp ****         osc4.SetPw(voice2.pw2);
- 152:oscillator.cpp ****         SetOscWaveform(osc4, voice2.wave2);
- 1811              		.loc 7 152 23 view .LVU464
+ 173:oscillator.cpp ****         osc4.SetAmp(voice2.vol2);
+ 174:oscillator.cpp ****         osc4.SetPw(voice2.pw2);
+ 175:oscillator.cpp ****         SetOscWaveform(osc4, voice2.wave2);
+ 1811              		.loc 7 175 23 view .LVU464
  1812 03cc E369     		ldr	r3, [r4, #28]
  1813              	.LBB600:
  1814              	.LBB594:
@@ -3275,6 +3298,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1822              	.LBE590:
  1823              	.LBE594:
  1824              	.LBE600:
+ARM GAS  /tmp/ccdA0TMp.s 			page 56
+
+
  1825              	.LBB601:
  1826              	.LBB602:
   25:oscillator.cpp ****         case 0: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
@@ -3292,15 +3318,12 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1836              		.loc 1 70 20 view .LVU468
  1837              	.LBE564:
  1838              	.LBE612:
- 150:oscillator.cpp ****         osc4.SetAmp(voice2.vol2);
- 1839              		.loc 7 150 9 is_stmt 1 view .LVU469
+ 173:oscillator.cpp ****         osc4.SetAmp(voice2.vol2);
+ 1839              		.loc 7 173 9 is_stmt 1 view .LVU469
  1840              	.LBB613:
  1841              	.LBI569:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
  1842              		.loc 1 76 17 view .LVU470
-ARM GAS  /tmp/cc29Sbe2.s 			page 56
-
-
  1843              	.LBB572:
   76:../../../DaisySP/Source/Synthesis/oscillator.h ****     /** Sets the waveform to be synthesized by the Process() function.
  1844              		.loc 1 76 41 view .LVU471
@@ -3335,12 +3358,15 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1870              		.thumb
  1871              		.syntax unified
  1872              	.LBE578:
+ARM GAS  /tmp/ccdA0TMp.s 			page 57
+
+
  1873              	.LBE587:
  1874              	.LBE591:
  1875              	.LBE595:
  1876              	.LBE614:
- 151:oscillator.cpp ****         SetOscWaveform(osc4, voice2.wave2);
- 1877              		.loc 7 151 9 is_stmt 1 view .LVU475
+ 174:oscillator.cpp ****         SetOscWaveform(osc4, voice2.wave2);
+ 1877              		.loc 7 174 9 is_stmt 1 view .LVU475
  1878              	.LBB615:
  1879              	.LBI573:
  1880              		.loc 1 85 17 view .LVU476
@@ -3358,9 +3384,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1891              	.LBB640:
  1892              	.LBB616:
  1893              	.LBB597:
-ARM GAS  /tmp/cc29Sbe2.s 			page 57
-
-
  1894              	.LBB593:
  1895              	.LBB588:
  1896              	.LBI580:
@@ -3395,7 +3418,10 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1915              	.LBE593:
  1916              	.LBE597:
  1917              	.LBE616:
- 1918              		.loc 7 152 9 is_stmt 1 view .LVU490
+ARM GAS  /tmp/ccdA0TMp.s 			page 58
+
+
+ 1918              		.loc 7 175 9 is_stmt 1 view .LVU490
  1919              	.LBB617:
  1920              	.LBI601:
   24:oscillator.cpp ****     switch(index) {
@@ -3418,9 +3444,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1935 03e4 67D0     		beq	.L54
  1936 03e6 022B     		cmp	r3, #2
  1937 03e8 61D0     		beq	.L55
-ARM GAS  /tmp/cc29Sbe2.s 			page 58
-
-
  1938 03ea 002B     		cmp	r3, #0
  1939 03ec 5CD0     		beq	.L76
  1940              	.LVL97:
@@ -3429,197 +3452,197 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  1942              		.loc 7 25 5 view .LVU495
  1943              	.LBE610:
  1944              	.LBE619:
- 153:oscillator.cpp **** 
- 154:oscillator.cpp ****         // Handle waveform buttons
- 155:oscillator.cpp ****         bool currentButtonState1 = !buttonWave1.Read();
- 1945              		.loc 7 155 9 is_stmt 1 view .LVU496
- 1946              		.loc 7 155 53 is_stmt 0 view .LVU497
+ 176:oscillator.cpp **** 
+ 177:oscillator.cpp ****         // Handle waveform buttons
+ 178:oscillator.cpp ****         bool currentButtonState1 = !buttonWave1.Read();
+ 1945              		.loc 7 178 9 is_stmt 1 view .LVU496
+ 1946              		.loc 7 178 53 is_stmt 0 view .LVU497
  1947 03ee 0BA8     		add	r0, sp, #44
  1948 03f0 FFF7FEFF 		bl	_ZN5daisy4GPIO4ReadEv
  1949              	.LVL98:
- 1950              		.loc 7 155 54 view .LVU498
+ 1950              		.loc 7 178 54 view .LVU498
  1951 03f4 80F00100 		eor	r0, r0, #1
  1952              	.LVL99:
- 156:oscillator.cpp ****         if(currentButtonState1 && !lastButtonState1) UpdateWaveform1();
- 1953              		.loc 7 156 9 is_stmt 1 view .LVU499
+ 179:oscillator.cpp ****         if(currentButtonState1 && !lastButtonState1) UpdateWaveform1();
+ 1953              		.loc 7 179 9 is_stmt 1 view .LVU499
  1954 03f8 10F0FF00 		ands	r0, r0, #255
  1955              	.LVL100:
- 1956              		.loc 7 156 9 is_stmt 0 view .LVU500
+ 1956              		.loc 7 179 9 is_stmt 0 view .LVU500
  1957 03fc 04D0     		beq	.L57
- 1958              		.loc 7 156 32 discriminator 1 view .LVU501
+ 1958              		.loc 7 179 32 discriminator 1 view .LVU501
  1959 03fe 514B     		ldr	r3, .L82+36
  1960 0400 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
  1961 0402 002B     		cmp	r3, #0
  1962 0404 00F0A280 		beq	.L77
  1963              	.L57:
- 157:oscillator.cpp ****         lastButtonState1 = currentButtonState1;
- 1964              		.loc 7 157 9 is_stmt 1 view .LVU502
- 1965              		.loc 7 157 26 is_stmt 0 view .LVU503
+ 180:oscillator.cpp ****         lastButtonState1 = currentButtonState1;
+ 1964              		.loc 7 180 9 is_stmt 1 view .LVU502
+ 1965              		.loc 7 180 26 is_stmt 0 view .LVU503
+ARM GAS  /tmp/ccdA0TMp.s 			page 59
+
+
  1966 0408 4E4B     		ldr	r3, .L82+36
  1967 040a 1870     		strb	r0, [r3]
- 158:oscillator.cpp ****         
- 159:oscillator.cpp ****         bool currentButtonState2 = !buttonWave2.Read();
- 1968              		.loc 7 159 9 is_stmt 1 view .LVU504
- 1969              		.loc 7 159 53 is_stmt 0 view .LVU505
+ 181:oscillator.cpp ****         
+ 182:oscillator.cpp ****         bool currentButtonState2 = !buttonWave2.Read();
+ 1968              		.loc 7 182 9 is_stmt 1 view .LVU504
+ 1969              		.loc 7 182 53 is_stmt 0 view .LVU505
  1970 040c 10A8     		add	r0, sp, #64
  1971 040e FFF7FEFF 		bl	_ZN5daisy4GPIO4ReadEv
  1972              	.LVL101:
- 1973              		.loc 7 159 54 view .LVU506
+ 1973              		.loc 7 182 54 view .LVU506
  1974 0412 80F00100 		eor	r0, r0, #1
  1975              	.LVL102:
- 160:oscillator.cpp ****         if(currentButtonState2 && !lastButtonState2) UpdateWaveform2();
- 1976              		.loc 7 160 9 is_stmt 1 view .LVU507
+ 183:oscillator.cpp ****         if(currentButtonState2 && !lastButtonState2) UpdateWaveform2();
+ 1976              		.loc 7 183 9 is_stmt 1 view .LVU507
  1977 0416 10F0FF00 		ands	r0, r0, #255
  1978              	.LVL103:
- 1979              		.loc 7 160 9 is_stmt 0 view .LVU508
+ 1979              		.loc 7 183 9 is_stmt 0 view .LVU508
  1980 041a 03D0     		beq	.L59
- 1981              		.loc 7 160 32 discriminator 1 view .LVU509
+ 1981              		.loc 7 183 32 discriminator 1 view .LVU509
  1982 041c 4A4B     		ldr	r3, .L82+40
  1983 041e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
  1984 0420 002B     		cmp	r3, #0
  1985 0422 6DD0     		beq	.L78
-ARM GAS  /tmp/cc29Sbe2.s 			page 59
-
-
  1986              	.L59:
- 161:oscillator.cpp ****         lastButtonState2 = currentButtonState2;
- 1987              		.loc 7 161 9 is_stmt 1 view .LVU510
- 1988              		.loc 7 161 26 is_stmt 0 view .LVU511
+ 184:oscillator.cpp ****         lastButtonState2 = currentButtonState2;
+ 1987              		.loc 7 184 9 is_stmt 1 view .LVU510
+ 1988              		.loc 7 184 26 is_stmt 0 view .LVU511
  1989 0424 484B     		ldr	r3, .L82+40
  1990 0426 1870     		strb	r0, [r3]
- 162:oscillator.cpp ****         
- 163:oscillator.cpp ****         // Handle voice select button
- 164:oscillator.cpp ****         bool currentButtonStateVoice = !buttonVoice.Read();
- 1991              		.loc 7 164 9 is_stmt 1 view .LVU512
- 1992              		.loc 7 164 57 is_stmt 0 view .LVU513
+ 185:oscillator.cpp ****         
+ 186:oscillator.cpp ****         // Handle voice select button
+ 187:oscillator.cpp ****         bool currentButtonStateVoice = !buttonVoice.Read();
+ 1991              		.loc 7 187 9 is_stmt 1 view .LVU512
+ 1992              		.loc 7 187 57 is_stmt 0 view .LVU513
  1993 0428 15A8     		add	r0, sp, #84
  1994 042a FFF7FEFF 		bl	_ZN5daisy4GPIO4ReadEv
  1995              	.LVL104:
- 1996              		.loc 7 164 58 view .LVU514
+ 1996              		.loc 7 187 58 view .LVU514
  1997 042e 80F00100 		eor	r0, r0, #1
  1998              	.LVL105:
- 165:oscillator.cpp ****         if(currentButtonStateVoice && !lastButtonStateVoice) {
- 1999              		.loc 7 165 9 is_stmt 1 view .LVU515
+ 188:oscillator.cpp ****         if(currentButtonStateVoice && !lastButtonStateVoice) {
+ 1999              		.loc 7 188 9 is_stmt 1 view .LVU515
  2000 0432 10F0FF00 		ands	r0, r0, #255
  2001              	.LVL106:
- 2002              		.loc 7 165 9 is_stmt 0 view .LVU516
+ 2002              		.loc 7 188 9 is_stmt 0 view .LVU516
  2003 0436 08D0     		beq	.L61
- 2004              		.loc 7 165 36 discriminator 1 view .LVU517
+ 2004              		.loc 7 188 36 discriminator 1 view .LVU517
  2005 0438 99F80030 		ldrb	r3, [r9]	@ zero_extendqisi2
  2006 043c 2BB9     		cbnz	r3, .L61
- 166:oscillator.cpp ****             currentVoice = 1 - currentVoice;
- 2007              		.loc 7 166 13 is_stmt 1 view .LVU518
- 2008              		.loc 7 166 30 is_stmt 0 view .LVU519
+ 189:oscillator.cpp ****             currentVoice = 1 - currentVoice;
+ 2007              		.loc 7 189 13 is_stmt 1 view .LVU518
+ 2008              		.loc 7 189 30 is_stmt 0 view .LVU519
  2009 043e DBF80030 		ldr	r3, [fp]
  2010 0442 C3F10103 		rsb	r3, r3, #1
- 2011              		.loc 7 166 26 view .LVU520
+ 2011              		.loc 7 189 26 view .LVU520
  2012 0446 CBF80030 		str	r3, [fp]
  2013              	.L61:
- 167:oscillator.cpp ****         }
- 168:oscillator.cpp ****         lastButtonStateVoice = currentButtonStateVoice;
- 2014              		.loc 7 168 9 is_stmt 1 view .LVU521
- 2015              		.loc 7 168 30 is_stmt 0 view .LVU522
+ARM GAS  /tmp/ccdA0TMp.s 			page 60
+
+
+ 190:oscillator.cpp ****         }
+ 191:oscillator.cpp ****         lastButtonStateVoice = currentButtonStateVoice;
+ 2014              		.loc 7 191 9 is_stmt 1 view .LVU521
+ 2015              		.loc 7 191 30 is_stmt 0 view .LVU522
  2016 044a 89F80000 		strb	r0, [r9]
- 169:oscillator.cpp ****         
- 170:oscillator.cpp ****         System::Delay(10);
- 2017              		.loc 7 170 9 is_stmt 1 view .LVU523
- 2018              		.loc 7 170 22 is_stmt 0 view .LVU524
+ 192:oscillator.cpp ****         
+ 193:oscillator.cpp ****         System::Delay(10);
+ 2017              		.loc 7 193 9 is_stmt 1 view .LVU523
+ 2018              		.loc 7 193 22 is_stmt 0 view .LVU524
  2019 044e 0A20     		movs	r0, #10
  2020 0450 FFF7FEFF 		bl	_ZN5daisy6System5DelayEm
  2021              	.LVL107:
  2022              	.LBE640:
- 113:oscillator.cpp ****     {
- 2023              		.loc 7 113 5 is_stmt 1 view .LVU525
+ 136:oscillator.cpp ****     {
+ 2023              		.loc 7 136 5 is_stmt 1 view .LVU525
  2024              	.L62:
- 113:oscillator.cpp ****     {
- 2025              		.loc 7 113 5 view .LVU526
+ 136:oscillator.cpp ****     {
+ 2025              		.loc 7 136 5 view .LVU526
  2026              	.LBB641:
- 116:oscillator.cpp ****             voice1.vol1 = hw.adc.GetFloat(0);
- 2027              		.loc 7 116 9 view .LVU527
+ 139:oscillator.cpp ****             voice1.vol1 = hw.adc.GetFloat(0);
+ 2027              		.loc 7 139 9 view .LVU527
  2028 0454 DBF80010 		ldr	r1, [fp]
  2029 0458 0029     		cmp	r1, #0
-ARM GAS  /tmp/cc29Sbe2.s 			page 60
-
-
  2030 045a 3FF4C1AE 		beq	.L79
- 124:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
- 2031              		.loc 7 124 13 view .LVU528
- 124:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
- 2032              		.loc 7 124 42 is_stmt 0 view .LVU529
+ 147:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
+ 2031              		.loc 7 147 13 view .LVU528
+ 147:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
+ 2032              		.loc 7 147 42 is_stmt 0 view .LVU529
  2033 045e 0021     		movs	r1, #0
  2034 0460 2F48     		ldr	r0, .L82
  2035 0462 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  2036              	.LVL108:
- 125:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
- 2037              		.loc 7 125 44 view .LVU530
+ 148:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
+ 2037              		.loc 7 148 44 view .LVU530
  2038 0466 0121     		movs	r1, #1
  2039 0468 2D48     		ldr	r0, .L82
- 124:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
- 2040              		.loc 7 124 25 view .LVU531
+ 147:oscillator.cpp ****             voice2.pitch1 = hw.adc.GetFloat(1);
+ 2040              		.loc 7 147 25 view .LVU531
  2041 046a 84ED000A 		vstr.32	s0, [r4]
- 125:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
- 2042              		.loc 7 125 13 is_stmt 1 view .LVU532
- 125:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
- 2043              		.loc 7 125 44 is_stmt 0 view .LVU533
+ 148:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
+ 2042              		.loc 7 148 13 is_stmt 1 view .LVU532
+ 148:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
+ 2043              		.loc 7 148 44 is_stmt 0 view .LVU533
  2044 046e FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  2045              	.LVL109:
- 126:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
- 2046              		.loc 7 126 41 view .LVU534
+ 149:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
+ 2046              		.loc 7 149 41 view .LVU534
  2047 0472 0221     		movs	r1, #2
  2048 0474 2A48     		ldr	r0, .L82
- 125:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
- 2049              		.loc 7 125 27 view .LVU535
+ 148:oscillator.cpp ****             voice2.pw1 = hw.adc.GetFloat(2);
+ 2049              		.loc 7 148 27 view .LVU535
  2050 0476 84ED020A 		vstr.32	s0, [r4, #8]
- 126:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
- 2051              		.loc 7 126 13 is_stmt 1 view .LVU536
- 126:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
- 2052              		.loc 7 126 41 is_stmt 0 view .LVU537
+ 149:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
+ 2051              		.loc 7 149 13 is_stmt 1 view .LVU536
+ 149:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
+ 2052              		.loc 7 149 41 is_stmt 0 view .LVU537
  2053 047a FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
+ARM GAS  /tmp/ccdA0TMp.s 			page 61
+
+
  2054              	.LVL110:
- 127:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
- 2055              		.loc 7 127 42 view .LVU538
+ 150:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
+ 2055              		.loc 7 150 42 view .LVU538
  2056 047e 0321     		movs	r1, #3
  2057 0480 2748     		ldr	r0, .L82
- 126:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
- 2058              		.loc 7 126 24 view .LVU539
+ 149:oscillator.cpp ****             voice2.vol2 = hw.adc.GetFloat(3);
+ 2058              		.loc 7 149 24 view .LVU539
  2059 0482 84ED040A 		vstr.32	s0, [r4, #16]
- 127:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
- 2060              		.loc 7 127 13 is_stmt 1 view .LVU540
- 127:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
- 2061              		.loc 7 127 42 is_stmt 0 view .LVU541
+ 150:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
+ 2060              		.loc 7 150 13 is_stmt 1 view .LVU540
+ 150:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
+ 2061              		.loc 7 150 42 is_stmt 0 view .LVU541
  2062 0486 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  2063              	.LVL111:
- 128:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
- 2064              		.loc 7 128 44 view .LVU542
+ 151:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
+ 2064              		.loc 7 151 44 view .LVU542
  2065 048a 0421     		movs	r1, #4
  2066 048c 2448     		ldr	r0, .L82
- 127:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
- 2067              		.loc 7 127 25 view .LVU543
+ 150:oscillator.cpp ****             voice2.pitch2 = hw.adc.GetFloat(4);
+ 2067              		.loc 7 150 25 view .LVU543
  2068 048e 84ED010A 		vstr.32	s0, [r4, #4]
- 128:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
- 2069              		.loc 7 128 13 is_stmt 1 view .LVU544
-ARM GAS  /tmp/cc29Sbe2.s 			page 61
-
-
- 128:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
- 2070              		.loc 7 128 44 is_stmt 0 view .LVU545
+ 151:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
+ 2069              		.loc 7 151 13 is_stmt 1 view .LVU544
+ 151:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
+ 2070              		.loc 7 151 44 is_stmt 0 view .LVU545
  2071 0492 FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  2072              	.LVL112:
- 129:oscillator.cpp ****         }
- 2073              		.loc 7 129 41 view .LVU546
+ 152:oscillator.cpp ****         }
+ 2073              		.loc 7 152 41 view .LVU546
  2074 0496 0521     		movs	r1, #5
  2075 0498 2148     		ldr	r0, .L82
- 128:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
- 2076              		.loc 7 128 27 view .LVU547
+ 151:oscillator.cpp ****             voice2.pw2 = hw.adc.GetFloat(5);
+ 2076              		.loc 7 151 27 view .LVU547
  2077 049a 84ED030A 		vstr.32	s0, [r4, #12]
- 129:oscillator.cpp ****         }
- 2078              		.loc 7 129 13 is_stmt 1 view .LVU548
- 129:oscillator.cpp ****         }
- 2079              		.loc 7 129 41 is_stmt 0 view .LVU549
+ 152:oscillator.cpp ****         }
+ 2078              		.loc 7 152 13 is_stmt 1 view .LVU548
+ 152:oscillator.cpp ****         }
+ 2079              		.loc 7 152 41 is_stmt 0 view .LVU549
  2080 049e FFF7FEFF 		bl	_ZNK5daisy9AdcHandle8GetFloatEh
  2081              	.LVL113:
- 129:oscillator.cpp ****         }
- 2082              		.loc 7 129 24 view .LVU550
+ 152:oscillator.cpp ****         }
+ 2082              		.loc 7 152 24 view .LVU550
  2083 04a2 84ED050A 		vstr.32	s0, [r4, #20]
  2084 04a6 BEE6     		b	.L44
  2085              	.LVL114:
@@ -3635,6 +3658,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
  2093              		.loc 1 79 17 view .LVU553
  2094              	.LBB604:
+ARM GAS  /tmp/ccdA0TMp.s 			page 62
+
+
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2095              		.loc 1 81 9 view .LVU554
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
@@ -3658,9 +3684,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   28:oscillator.cpp ****     }
  2109              		.loc 7 28 17 view .LVU560
  2110              	.LBB605:
-ARM GAS  /tmp/cc29Sbe2.s 			page 62
-
-
  2111              	.LBI605:
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
  2112              		.loc 1 79 17 view .LVU561
@@ -3695,6 +3718,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2133              	.LBB608:
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2134              		.loc 1 81 9 view .LVU570
+ARM GAS  /tmp/ccdA0TMp.s 			page 63
+
+
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2135              		.loc 1 81 19 is_stmt 0 view .LVU571
  2136 04b6 0623     		movs	r3, #6
@@ -3718,9 +3744,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2151              	.LBB547:
   26:oscillator.cpp ****         case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
  2152              		.loc 7 26 9 is_stmt 1 view .LVU575
-ARM GAS  /tmp/cc29Sbe2.s 			page 63
-
-
   26:oscillator.cpp ****         case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
  2153              		.loc 7 26 17 view .LVU576
  2154              	.LBB539:
@@ -3755,6 +3778,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
  2175              		.loc 1 79 17 view .LVU585
  2176              	.LBB542:
+ARM GAS  /tmp/ccdA0TMp.s 			page 64
+
+
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2177              		.loc 1 81 9 view .LVU586
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
@@ -3778,9 +3804,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   27:oscillator.cpp ****         case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
  2191              		.loc 7 27 17 view .LVU592
  2192              	.LBB543:
-ARM GAS  /tmp/cc29Sbe2.s 			page 64
-
-
  2193              	.LBI543:
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
  2194              		.loc 1 79 17 view .LVU593
@@ -3815,6 +3838,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2216              	.LBI418:
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
  2217              		.loc 1 79 17 view .LVU601
+ARM GAS  /tmp/ccdA0TMp.s 			page 65
+
+
  2218              	.LBB419:
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2219              		.loc 1 81 9 view .LVU602
@@ -3838,9 +3864,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2232              		.loc 7 27 9 is_stmt 1 view .LVU607
   27:oscillator.cpp ****         case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
  2233              		.loc 7 27 17 view .LVU608
-ARM GAS  /tmp/cc29Sbe2.s 			page 65
-
-
  2234              	.LBB420:
  2235              	.LBI420:
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
@@ -3875,6 +3898,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2257              	.LBB479:
  2258              	.LBI479:
   79:../../../DaisySP/Source/Synthesis/oscillator.h ****     {
+ARM GAS  /tmp/ccdA0TMp.s 			page 66
+
+
  2259              		.loc 1 79 17 view .LVU617
  2260              	.LBB480:
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
@@ -3898,9 +3924,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   28:oscillator.cpp ****     }
  2274              		.loc 7 28 9 is_stmt 1 view .LVU623
   28:oscillator.cpp ****     }
-ARM GAS  /tmp/cc29Sbe2.s 			page 66
-
-
  2275              		.loc 7 28 17 view .LVU624
  2276              	.LBB481:
  2277              	.LBI481:
@@ -3935,6 +3958,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2297              		.loc 1 79 17 view .LVU633
  2298              	.LBB484:
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
+ARM GAS  /tmp/ccdA0TMp.s 			page 67
+
+
  2299              		.loc 1 81 9 view .LVU634
   81:../../../DaisySP/Source/Synthesis/oscillator.h ****     }
  2300              		.loc 1 81 19 is_stmt 0 view .LVU635
@@ -3958,9 +3984,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2315              	.LBB427:
   26:oscillator.cpp ****         case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
  2316              		.loc 7 26 9 is_stmt 1 view .LVU639
-ARM GAS  /tmp/cc29Sbe2.s 			page 67
-
-
   26:oscillator.cpp ****         case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
  2317              		.loc 7 26 17 view .LVU640
  2318              	.LBB422:
@@ -3988,47 +4011,47 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2334              	.LBE422:
  2335              	.LBE427:
  2336              	.LBE624:
- 160:oscillator.cpp ****         lastButtonState2 = currentButtonState2;
- 2337              		.loc 7 160 54 is_stmt 1 view .LVU647
+ 183:oscillator.cpp ****         lastButtonState2 = currentButtonState2;
+ 2337              		.loc 7 183 54 is_stmt 1 view .LVU647
  2338              	.LBB625:
  2339              	.LBI625:
-  70:oscillator.cpp **** {
- 2340              		.loc 7 70 6 view .LVU648
+  93:oscillator.cpp **** {
+ 2340              		.loc 7 93 6 view .LVU648
  2341              	.LBB626:
-  72:oscillator.cpp ****         voice1.wave2 = (voice1.wave2 + 1) % 3;
- 2342              		.loc 7 72 5 view .LVU649
+ARM GAS  /tmp/ccdA0TMp.s 			page 68
+
+
+  95:oscillator.cpp ****         voice1.wave2 = (voice1.wave2 + 1) % 3;
+ 2342              		.loc 7 95 5 view .LVU649
  2343 0500 DBF80030 		ldr	r3, [fp]
  2344 0504 93BB     		cbnz	r3, .L60
  2345              	.LBB627:
  2346              	.LBI627:
-  70:oscillator.cpp **** {
- 2347              		.loc 7 70 6 view .LVU650
+  93:oscillator.cpp **** {
+ 2347              		.loc 7 93 6 view .LVU650
  2348              	.LBB628:
-  73:oscillator.cpp ****     } else {
- 2349              		.loc 7 73 9 view .LVU651
-  73:oscillator.cpp ****     } else {
- 2350              		.loc 7 73 38 is_stmt 0 view .LVU652
+  96:oscillator.cpp ****     } else {
+ 2349              		.loc 7 96 9 view .LVU651
+  96:oscillator.cpp ****     } else {
+ 2350              		.loc 7 96 38 is_stmt 0 view .LVU652
  2351 0506 EA69     		ldr	r2, [r5, #28]
-  73:oscillator.cpp ****     } else {
- 2352              		.loc 7 73 43 view .LVU653
+  96:oscillator.cpp ****     } else {
+ 2352              		.loc 7 96 43 view .LVU653
  2353 0508 A3F1AA33 		sub	r3, r3, #-1431655766
-  73:oscillator.cpp ****     } else {
- 2354              		.loc 7 73 38 view .LVU654
+  96:oscillator.cpp ****     } else {
+ 2354              		.loc 7 96 38 view .LVU654
  2355 050c 0132     		adds	r2, r2, #1
-  73:oscillator.cpp ****     } else {
- 2356              		.loc 7 73 43 view .LVU655
+  96:oscillator.cpp ****     } else {
+ 2356              		.loc 7 96 43 view .LVU655
  2357 050e 83FB0213 		smull	r1, r3, r3, r2
-ARM GAS  /tmp/cc29Sbe2.s 			page 68
-
-
  2358 0512 A3EBE273 		sub	r3, r3, r2, asr #31
  2359 0516 03EB4303 		add	r3, r3, r3, lsl #1
  2360 051a D31A     		subs	r3, r2, r3
-  73:oscillator.cpp ****     } else {
- 2361              		.loc 7 73 22 view .LVU656
+  96:oscillator.cpp ****     } else {
+ 2361              		.loc 7 96 22 view .LVU656
  2362 051c EB61     		str	r3, [r5, #28]
-  77:oscillator.cpp **** 
- 2363              		.loc 7 77 1 view .LVU657
+ 100:oscillator.cpp **** 
+ 2363              		.loc 7 100 1 view .LVU657
  2364 051e 81E7     		b	.L59
  2365              	.L83:
  2366              		.align	2
@@ -4045,113 +4068,113 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2377 0544 00000000 		.word	.LANCHOR13
  2378 0548 00000000 		.word	.LANCHOR14
  2379              	.L77:
-  77:oscillator.cpp **** 
- 2380              		.loc 7 77 1 view .LVU658
+ 100:oscillator.cpp **** 
+ 2380              		.loc 7 100 1 view .LVU658
  2381              	.LBE628:
  2382              	.LBE627:
  2383              	.LBE626:
  2384              	.LBE625:
- 156:oscillator.cpp ****         lastButtonState1 = currentButtonState1;
- 2385              		.loc 7 156 54 is_stmt 1 view .LVU659
+ 179:oscillator.cpp ****         lastButtonState1 = currentButtonState1;
+ 2385              		.loc 7 179 54 is_stmt 1 view .LVU659
  2386              	.LBB630:
  2387              	.LBI630:
-  61:oscillator.cpp **** {
- 2388              		.loc 7 61 6 view .LVU660
+ARM GAS  /tmp/ccdA0TMp.s 			page 69
+
+
+  84:oscillator.cpp **** {
+ 2388              		.loc 7 84 6 view .LVU660
  2389              	.LBB631:
-  63:oscillator.cpp ****         voice1.wave1 = (voice1.wave1 + 1) % 3;
- 2390              		.loc 7 63 5 view .LVU661
+  86:oscillator.cpp ****         voice1.wave1 = (voice1.wave1 + 1) % 3;
+ 2390              		.loc 7 86 5 view .LVU661
  2391 054c DBF80030 		ldr	r3, [fp]
  2392 0550 C3B9     		cbnz	r3, .L58
  2393              	.LBB632:
  2394              	.LBI632:
-  61:oscillator.cpp **** {
- 2395              		.loc 7 61 6 view .LVU662
+  84:oscillator.cpp **** {
+ 2395              		.loc 7 84 6 view .LVU662
  2396              	.LBB633:
-  64:oscillator.cpp ****     } else {
- 2397              		.loc 7 64 9 view .LVU663
-  64:oscillator.cpp ****     } else {
- 2398              		.loc 7 64 38 is_stmt 0 view .LVU664
+  87:oscillator.cpp ****     } else {
+ 2397              		.loc 7 87 9 view .LVU663
+  87:oscillator.cpp ****     } else {
+ 2398              		.loc 7 87 38 is_stmt 0 view .LVU664
  2399 0552 AA69     		ldr	r2, [r5, #24]
-  64:oscillator.cpp ****     } else {
- 2400              		.loc 7 64 43 view .LVU665
+  87:oscillator.cpp ****     } else {
+ 2400              		.loc 7 87 43 view .LVU665
  2401 0554 A3F1AA33 		sub	r3, r3, #-1431655766
-  64:oscillator.cpp ****     } else {
- 2402              		.loc 7 64 38 view .LVU666
+  87:oscillator.cpp ****     } else {
+ 2402              		.loc 7 87 38 view .LVU666
  2403 0558 0132     		adds	r2, r2, #1
-ARM GAS  /tmp/cc29Sbe2.s 			page 69
-
-
-  64:oscillator.cpp ****     } else {
- 2404              		.loc 7 64 43 view .LVU667
+  87:oscillator.cpp ****     } else {
+ 2404              		.loc 7 87 43 view .LVU667
  2405 055a 83FB0213 		smull	r1, r3, r3, r2
  2406 055e A3EBE273 		sub	r3, r3, r2, asr #31
  2407 0562 03EB4303 		add	r3, r3, r3, lsl #1
  2408 0566 D31A     		subs	r3, r2, r3
-  64:oscillator.cpp ****     } else {
- 2409              		.loc 7 64 22 view .LVU668
+  87:oscillator.cpp ****     } else {
+ 2409              		.loc 7 87 22 view .LVU668
  2410 0568 AB61     		str	r3, [r5, #24]
-  68:oscillator.cpp **** 
- 2411              		.loc 7 68 1 view .LVU669
+  91:oscillator.cpp **** 
+ 2411              		.loc 7 91 1 view .LVU669
  2412 056a 4DE7     		b	.L57
  2413              	.L60:
-  68:oscillator.cpp **** 
- 2414              		.loc 7 68 1 view .LVU670
+  91:oscillator.cpp **** 
+ 2414              		.loc 7 91 1 view .LVU670
  2415              	.LBE633:
  2416              	.LBE632:
  2417              	.LBE631:
  2418              	.LBE630:
  2419              	.LBB635:
  2420              	.LBB629:
-  75:oscillator.cpp ****     }
- 2421              		.loc 7 75 9 is_stmt 1 view .LVU671
-  75:oscillator.cpp ****     }
- 2422              		.loc 7 75 38 is_stmt 0 view .LVU672
+  98:oscillator.cpp ****     }
+ 2421              		.loc 7 98 9 is_stmt 1 view .LVU671
+  98:oscillator.cpp ****     }
+ 2422              		.loc 7 98 38 is_stmt 0 view .LVU672
  2423 056c E269     		ldr	r2, [r4, #28]
-  75:oscillator.cpp ****     }
- 2424              		.loc 7 75 43 view .LVU673
+  98:oscillator.cpp ****     }
+ 2424              		.loc 7 98 43 view .LVU673
  2425 056e 0B4B     		ldr	r3, .L84
-  75:oscillator.cpp ****     }
- 2426              		.loc 7 75 38 view .LVU674
+  98:oscillator.cpp ****     }
+ 2426              		.loc 7 98 38 view .LVU674
  2427 0570 0132     		adds	r2, r2, #1
-  75:oscillator.cpp ****     }
- 2428              		.loc 7 75 43 view .LVU675
+  98:oscillator.cpp ****     }
+ 2428              		.loc 7 98 43 view .LVU675
+ARM GAS  /tmp/ccdA0TMp.s 			page 70
+
+
  2429 0572 83FB0213 		smull	r1, r3, r3, r2
  2430 0576 A3EBE273 		sub	r3, r3, r2, asr #31
  2431 057a 03EB4303 		add	r3, r3, r3, lsl #1
  2432 057e D31A     		subs	r3, r2, r3
-  75:oscillator.cpp ****     }
- 2433              		.loc 7 75 22 view .LVU676
+  98:oscillator.cpp ****     }
+ 2433              		.loc 7 98 22 view .LVU676
  2434 0580 E361     		str	r3, [r4, #28]
  2435 0582 4FE7     		b	.L59
  2436              	.L58:
-  75:oscillator.cpp ****     }
- 2437              		.loc 7 75 22 view .LVU677
+  98:oscillator.cpp ****     }
+ 2437              		.loc 7 98 22 view .LVU677
  2438              	.LBE629:
  2439              	.LBE635:
  2440              	.LBB636:
  2441              	.LBB634:
-  66:oscillator.cpp ****     }
- 2442              		.loc 7 66 9 is_stmt 1 view .LVU678
-  66:oscillator.cpp ****     }
- 2443              		.loc 7 66 38 is_stmt 0 view .LVU679
+  89:oscillator.cpp ****     }
+ 2442              		.loc 7 89 9 is_stmt 1 view .LVU678
+  89:oscillator.cpp ****     }
+ 2443              		.loc 7 89 38 is_stmt 0 view .LVU679
  2444 0584 A269     		ldr	r2, [r4, #24]
-  66:oscillator.cpp ****     }
- 2445              		.loc 7 66 43 view .LVU680
+  89:oscillator.cpp ****     }
+ 2445              		.loc 7 89 43 view .LVU680
  2446 0586 054B     		ldr	r3, .L84
-ARM GAS  /tmp/cc29Sbe2.s 			page 70
-
-
-  66:oscillator.cpp ****     }
- 2447              		.loc 7 66 38 view .LVU681
+  89:oscillator.cpp ****     }
+ 2447              		.loc 7 89 38 view .LVU681
  2448 0588 0132     		adds	r2, r2, #1
-  66:oscillator.cpp ****     }
- 2449              		.loc 7 66 43 view .LVU682
+  89:oscillator.cpp ****     }
+ 2449              		.loc 7 89 43 view .LVU682
  2450 058a 83FB0213 		smull	r1, r3, r3, r2
  2451 058e A3EBE273 		sub	r3, r3, r2, asr #31
  2452 0592 03EB4303 		add	r3, r3, r3, lsl #1
  2453 0596 D31A     		subs	r3, r2, r3
-  66:oscillator.cpp ****     }
- 2454              		.loc 7 66 22 view .LVU683
+  89:oscillator.cpp ****     }
+ 2454              		.loc 7 89 22 view .LVU683
  2455 0598 A361     		str	r3, [r4, #24]
  2456 059a 35E7     		b	.L57
  2457              	.L85:
@@ -4172,15 +4195,18 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2473              		.fpu fpv5-d16
  2475              	_GLOBAL__sub_I_hw:
  2476              	.LFB5249:
- 171:oscillator.cpp ****     }
- 172:oscillator.cpp **** }...
- 2477              		.loc 7 172 1 is_stmt 1 view -0
+ 194:oscillator.cpp ****     }
+ 195:oscillator.cpp **** }...
+ 2477              		.loc 7 195 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccdA0TMp.s 			page 71
+
+
  2478              		.cfi_startproc
  2479              		@ args = 0, pretend = 0, frame = 0
  2480              		@ frame_needed = 0, uses_anonymous_args = 0
  2481              	.LBB671:
  2482              	.LBI671:
- 2483              		.loc 7 172 1 view .LVU685
+ 2483              		.loc 7 195 1 view .LVU685
  2484              	.LVL139:
  2485              	.LBB672:
  2486              	.LBB673:
@@ -4198,9 +4224,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    5:../../../libDaisy/src/per/qspi.h **** 
    6:../../../libDaisy/src/per/qspi.h **** #include <cstdint>
    7:../../../libDaisy/src/per/qspi.h **** #include "daisy_core.h" // Added for dsy_gpio_pin typedef
-ARM GAS  /tmp/cc29Sbe2.s 			page 71
-
-
    8:../../../libDaisy/src/per/qspi.h **** 
    9:../../../libDaisy/src/per/qspi.h **** #define DSY_QSPI_TEXT       \
   10:../../../libDaisy/src/per/qspi.h ****     __attribute__((section( \
@@ -4235,6 +4258,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   39:../../../libDaisy/src/per/qspi.h ****     /** Indicates the current status of the module. 
   40:../../../libDaisy/src/per/qspi.h ****          *  Warnings are indicated by a leading W.
   41:../../../libDaisy/src/per/qspi.h ****          *  Errors are indicated by a leading E and cause an immediate exit.
+ARM GAS  /tmp/ccdA0TMp.s 			page 72
+
+
   42:../../../libDaisy/src/per/qspi.h ****          * 
   43:../../../libDaisy/src/per/qspi.h ****          *  \param GOOD - No errors have been reported.
   44:../../../libDaisy/src/per/qspi.h ****          *  \param E_HAL_ERROR - HAL code did not return HAL_OK.
@@ -4258,9 +4284,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   62:../../../libDaisy/src/per/qspi.h ****             IS25LP080D,  /**< & */
   63:../../../libDaisy/src/per/qspi.h ****             IS25LP064A,  /**< & */
   64:../../../libDaisy/src/per/qspi.h ****             DEVICE_LAST, /**< & */
-ARM GAS  /tmp/cc29Sbe2.s 			page 72
-
-
   65:../../../libDaisy/src/per/qspi.h ****         };
   66:../../../libDaisy/src/per/qspi.h **** 
   67:../../../libDaisy/src/per/qspi.h ****         /** 
@@ -4295,6 +4318,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   96:../../../libDaisy/src/per/qspi.h ****     /** 
   97:../../../libDaisy/src/per/qspi.h ****         Initializes QSPI peripheral, and Resets, and prepares memory for access.
   98:../../../libDaisy/src/per/qspi.h ****         \param config should be populated with the mode, device and pin_config before calling this 
+ARM GAS  /tmp/ccdA0TMp.s 			page 73
+
+
   99:../../../libDaisy/src/per/qspi.h ****         \return Result::OK or Result::ERR
  100:../../../libDaisy/src/per/qspi.h ****         */
  101:../../../libDaisy/src/per/qspi.h ****     Result Init(const Config& config);
@@ -4318,9 +4344,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  119:../../../libDaisy/src/per/qspi.h ****         \param size Buffer size
  120:../../../libDaisy/src/per/qspi.h ****         \param buffer Buffer to write
  121:../../../libDaisy/src/per/qspi.h ****         \return Result::OK or Result::ERR
-ARM GAS  /tmp/cc29Sbe2.s 			page 73
-
-
  122:../../../libDaisy/src/per/qspi.h ****         */
  123:../../../libDaisy/src/per/qspi.h ****     Result WritePage(uint32_t address, uint32_t size, uint8_t* buffer);
  124:../../../libDaisy/src/per/qspi.h **** 
@@ -4355,6 +4378,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  153:../../../libDaisy/src/per/qspi.h ****      *  \returns Status
  154:../../../libDaisy/src/per/qspi.h ****      */
  155:../../../libDaisy/src/per/qspi.h ****     Status GetStatus();
+ARM GAS  /tmp/ccdA0TMp.s 			page 74
+
+
  156:../../../libDaisy/src/per/qspi.h **** 
  157:../../../libDaisy/src/per/qspi.h ****     /** Returns a pointer to the actual memory used 
  158:../../../libDaisy/src/per/qspi.h ****      *  The memory at this address is read-only
@@ -4372,15 +4398,12 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2496              	.LBE673:
  2497              	.LBE672:
  2498              	.LBE671:
- 2499              		.loc 7 172 1 is_stmt 0 view .LVU688
+ 2499              		.loc 7 195 1 is_stmt 0 view .LVU688
  2500 0000 08B5     		push	{r3, lr}
  2501              		.cfi_def_cfa_offset 8
  2502              		.cfi_offset 3, -8
  2503              		.cfi_offset 14, -4
  2504              	.LBB704:
-ARM GAS  /tmp/cc29Sbe2.s 			page 74
-
-
  2505              	.LBB702:
  2506              	.LBB696:
  2507              	.LBB694:
@@ -4415,6 +4438,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   95:../../../libDaisy/src/hid/audio.h ****     ~AudioHandle() {}
  2535              		.loc 6 95 5 is_stmt 1 view .LVU693
  2536              	.LBB683:
+ARM GAS  /tmp/ccdA0TMp.s 			page 75
+
+
  2537              	.LBB684:
   95:../../../libDaisy/src/hid/audio.h ****     ~AudioHandle() {}
  2538              		.loc 6 95 35 is_stmt 0 view .LVU694
@@ -4438,9 +4464,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    1:../../../libDaisy/src/per/dac.h **** #pragma once
    2:../../../libDaisy/src/per/dac.h **** #ifndef DSY_DAC_H
    3:../../../libDaisy/src/per/dac.h **** #define DSY_DAC_H
-ARM GAS  /tmp/cc29Sbe2.s 			page 75
-
-
    4:../../../libDaisy/src/per/dac.h **** 
    5:../../../libDaisy/src/per/dac.h **** #include "daisy_core.h"
    6:../../../libDaisy/src/per/dac.h **** 
@@ -4475,6 +4498,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   35:../../../libDaisy/src/per/dac.h ****         TWO,
   36:../../../libDaisy/src/per/dac.h ****         BOTH,
   37:../../../libDaisy/src/per/dac.h ****     };
+ARM GAS  /tmp/ccdA0TMp.s 			page 76
+
+
   38:../../../libDaisy/src/per/dac.h **** 
   39:../../../libDaisy/src/per/dac.h ****     /** Sets the Mode for the DAC channels.
   40:../../../libDaisy/src/per/dac.h ****      **
@@ -4498,9 +4524,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   58:../../../libDaisy/src/per/dac.h ****         BITS_8,
   59:../../../libDaisy/src/per/dac.h ****         BITS_12
   60:../../../libDaisy/src/per/dac.h ****     };
-ARM GAS  /tmp/cc29Sbe2.s 			page 76
-
-
   61:../../../libDaisy/src/per/dac.h **** 
   62:../../../libDaisy/src/per/dac.h ****     /** Sets whether the DAC output is buffered for higher drive ability. */
   63:../../../libDaisy/src/per/dac.h ****     enum class BufferState
@@ -4535,6 +4558,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2560              	.LBE688:
  2561              	.LBE687:
  2562              	.LBE686:
+ARM GAS  /tmp/ccdA0TMp.s 			page 77
+
+
  2563              	.LBB689:
  2564              	.LBI689:
   40:../../../libDaisy/src/hid/usb.h **** 
@@ -4558,9 +4584,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    4:../../../libDaisy/src/per/sai.h **** 
    5:../../../libDaisy/src/per/sai.h **** #include "daisy_core.h"
    6:../../../libDaisy/src/per/sai.h **** 
-ARM GAS  /tmp/cc29Sbe2.s 			page 77
-
-
    7:../../../libDaisy/src/per/sai.h **** namespace daisy
    8:../../../libDaisy/src/per/sai.h **** {
    9:../../../libDaisy/src/per/sai.h **** /** 
@@ -4595,6 +4618,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   38:../../../libDaisy/src/per/sai.h ****  *  sai.Init(sai_config);
   39:../../../libDaisy/src/per/sai.h ****  *  // Now you can use it:
   40:../../../libDaisy/src/per/sai.h ****  *  sai.StartDma(. . .);
+ARM GAS  /tmp/ccdA0TMp.s 			page 78
+
+
   41:../../../libDaisy/src/per/sai.h ****  */
   42:../../../libDaisy/src/per/sai.h **** class SaiHandle
   43:../../../libDaisy/src/per/sai.h **** {
@@ -4618,9 +4644,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   61:../../../libDaisy/src/per/sai.h ****             SAI_48KHZ,
   62:../../../libDaisy/src/per/sai.h ****             SAI_96KHZ,
   63:../../../libDaisy/src/per/sai.h ****         };
-ARM GAS  /tmp/cc29Sbe2.s 			page 78
-
-
   64:../../../libDaisy/src/per/sai.h **** 
   65:../../../libDaisy/src/per/sai.h ****         /** Bit Depth that the hardware expects to be transferred to/from the device. */
   66:../../../libDaisy/src/per/sai.h ****         enum class BitDepth
@@ -4655,6 +4678,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
   95:../../../libDaisy/src/per/sai.h ****         SampleRate sr;
   96:../../../libDaisy/src/per/sai.h ****         BitDepth   bit_depth;
   97:../../../libDaisy/src/per/sai.h ****         Sync       a_sync, b_sync;
+ARM GAS  /tmp/ccdA0TMp.s 			page 79
+
+
   98:../../../libDaisy/src/per/sai.h ****         Direction  a_dir, b_dir;
   99:../../../libDaisy/src/per/sai.h ****     };
  100:../../../libDaisy/src/per/sai.h **** 
@@ -4678,9 +4704,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2585              	.LBE691:
  2586              	.LBE695:
  2587              	.LBE697:
-ARM GAS  /tmp/cc29Sbe2.s 			page 79
-
-
    8:oscillator.cpp **** DaisySeed hw;
  2588              		.loc 7 8 11 view .LVU708
  2589 0010 0E49     		ldr	r1, .L88+8
@@ -4715,6 +4738,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2612 0026 FFF7FEFF 		bl	__aeabi_atexit
  2613              	.LVL146:
  2614              	.LBB700:
+ARM GAS  /tmp/ccdA0TMp.s 			page 80
+
+
  2615              	.LBI700:
   23:../../../DaisySP/Source/Synthesis/oscillator.h ****     ~Oscillator() {}
  2616              		.loc 1 23 5 is_stmt 1 view .LVU715
@@ -4738,14 +4764,11 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
    9:oscillator.cpp **** Oscillator osc1, osc2, osc3, osc4;
  2630              		.loc 7 9 30 view .LVU720
  2631 0034 044A     		ldr	r2, .L88+4
-ARM GAS  /tmp/cc29Sbe2.s 			page 80
-
-
  2632 0036 0649     		ldr	r1, .L88+12
  2633 0038 0948     		ldr	r0, .L88+28
  2634              	.LBE702:
  2635              	.LBE704:
- 2636              		.loc 7 172 1 view .LVU721
+ 2636              		.loc 7 195 1 view .LVU721
  2637 003a BDE80840 		pop	{r3, lr}
  2638              		.cfi_restore 14
  2639              		.cfi_restore 3
@@ -4775,6 +4798,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2663              		.align	2
  2664 0000 00000000 		.word	_GLOBAL__sub_I_hw(target1)
  2665              		.global	lastButtonStateVoice
+ARM GAS  /tmp/ccdA0TMp.s 			page 81
+
+
  2666              		.global	lastButtonState2
  2667              		.global	lastButtonState1
  2668              		.global	currentVoice
@@ -4789,7 +4815,7 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2677              		.section	.rodata
  2678              		.align	2
  2679              		.set	.LANCHOR8,. + 0
- 2680              	.LC0:
+ 2680              	.LC1:
  2681 0000 0000003F 		.word	1056964608
  2682 0004 0000003F 		.word	1056964608
  2683 0008 0000003F 		.word	1056964608
@@ -4798,9 +4824,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2686 0014 0000003F 		.word	1056964608
  2687 0018 02000000 		.word	2
  2688 001c 02000000 		.word	2
-ARM GAS  /tmp/cc29Sbe2.s 			page 81
-
-
  2689              		.section	.bss.adcConfig,"aw",%nobits
  2690              		.align	2
  2691              		.set	.LANCHOR12,. + 0
@@ -4835,6 +4858,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2722              		.section	.bss.lastButtonStateVoice,"aw",%nobits
  2723              		.set	.LANCHOR15,. + 0
  2726              	lastButtonStateVoice:
+ARM GAS  /tmp/ccdA0TMp.s 			page 82
+
+
  2727 0000 00       		.space	1
  2728              		.section	.bss.osc1,"aw",%nobits
  2729              		.align	2
@@ -4858,9 +4884,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2743              		.align	2
  2744              		.set	.LANCHOR2,. + 0
  2747              	osc3:
-ARM GAS  /tmp/cc29Sbe2.s 			page 82
-
-
  2748 0000 00000000 		.space	44
  2748      00000000 
  2748      00000000 
@@ -4895,6 +4918,9 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2769      00000000 
  2770              		.section	.rodata._ZN5daisy4seedL3D12E,"a"
  2771              		.align	2
+ARM GAS  /tmp/ccdA0TMp.s 			page 83
+
+
  2772              		.set	.LANCHOR11,. + 0
  2775              	_ZN5daisy4seedL3D12E:
  2776 0000 01       		.byte	1
@@ -4918,9 +4944,6 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2798              		.file 16 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/s
  2799              		.file 17 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/lib/gcc/arm-none-eabi/1
  2800              		.file 18 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c
-ARM GAS  /tmp/cc29Sbe2.s 			page 83
-
-
  2801              		.file 19 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c
  2802              		.file 20 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c
  2803              		.file 21 "/home/neo/Documents/Developer/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c
@@ -4955,81 +4978,84 @@ ARM GAS  /tmp/cc29Sbe2.s 			page 1
  2832              		.file 50 "../../../libDaisy/src/util/wav_format.h"
  2833              		.file 51 "../../../libDaisy/src/dev/max11300.h"
  2834              		.file 52 "../../../libDaisy/src/dev/sdram.h"
+ARM GAS  /tmp/ccdA0TMp.s 			page 84
+
+
  2835              		.file 53 "../../../libDaisy/src/dev/sr_595.h"
  2836              		.file 54 "<built-in>"
-ARM GAS  /tmp/cc29Sbe2.s 			page 84
+ARM GAS  /tmp/ccdA0TMp.s 			page 85
 
 
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 oscillator.cpp
-     /tmp/cc29Sbe2.s:17     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 $t
-     /tmp/cc29Sbe2.s:26     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 _ZN7daisysp10OscillatorD2Ev
-     /tmp/cc29Sbe2.s:26     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 _ZN7daisysp10OscillatorD1Ev
-     /tmp/cc29Sbe2.s:43     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 $t
-     /tmp/cc29Sbe2.s:51     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 _ZN5daisy9DaisySeedD2Ev
-     /tmp/cc29Sbe2.s:51     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 _ZN5daisy9DaisySeedD1Ev
-     /tmp/cc29Sbe2.s:92     .text._Z13AudioCallbackPKPKfPPfj:0000000000000000 $t
-     /tmp/cc29Sbe2.s:100    .text._Z13AudioCallbackPKPKfPPfj:0000000000000000 _Z13AudioCallbackPKPKfPPfj
-     /tmp/cc29Sbe2.s:207    .text._Z13AudioCallbackPKPKfPPfj:0000000000000058 $d
-     /tmp/cc29Sbe2.s:215    .text._ZN7daisysp10Oscillator4InitEf:0000000000000000 $t
-     /tmp/cc29Sbe2.s:223    .text._ZN7daisysp10Oscillator4InitEf:0000000000000000 _ZN7daisysp10Oscillator4InitEf
-     /tmp/cc29Sbe2.s:292    .text._ZN7daisysp10Oscillator4InitEf:0000000000000040 $d
-     /tmp/cc29Sbe2.s:297    .text._Z14SetOscWaveformRN7daisysp10OscillatorEi:0000000000000000 $t
-     /tmp/cc29Sbe2.s:305    .text._Z14SetOscWaveformRN7daisysp10OscillatorEi:0000000000000000 _Z14SetOscWaveformRN7daisysp10OscillatorEi
-     /tmp/cc29Sbe2.s:377    .text._Z13QuantizePitchf:0000000000000000 $t
-     /tmp/cc29Sbe2.s:385    .text._Z13QuantizePitchf:0000000000000000 _Z13QuantizePitchf
-     /tmp/cc29Sbe2.s:435    .text._Z13QuantizePitchf:0000000000000038 $d
-     /tmp/cc29Sbe2.s:442    .text._Z15UpdateWaveform1v:0000000000000000 $t
-     /tmp/cc29Sbe2.s:450    .text._Z15UpdateWaveform1v:0000000000000000 _Z15UpdateWaveform1v
-     /tmp/cc29Sbe2.s:496    .text._Z15UpdateWaveform1v:0000000000000024 $d
-     /tmp/cc29Sbe2.s:504    .text._Z15UpdateWaveform2v:0000000000000000 $t
-     /tmp/cc29Sbe2.s:512    .text._Z15UpdateWaveform2v:0000000000000000 _Z15UpdateWaveform2v
-     /tmp/cc29Sbe2.s:558    .text._Z15UpdateWaveform2v:0000000000000024 $d
-     /tmp/cc29Sbe2.s:566    .text.startup.main:0000000000000000 $t
-     /tmp/cc29Sbe2.s:574    .text.startup.main:0000000000000000 main
-     /tmp/cc29Sbe2.s:937    .text.startup.main:000000000000018c $d
-     /tmp/cc29Sbe2.s:962    .text.startup.main:00000000000001e0 $t
-     /tmp/cc29Sbe2.s:2368   .text.startup.main:0000000000000520 $d
-     /tmp/cc29Sbe2.s:2391   .text.startup.main:000000000000054c $t
-     /tmp/cc29Sbe2.s:2460   .text.startup.main:000000000000059c $d
-     /tmp/cc29Sbe2.s:2468   .text.startup._GLOBAL__sub_I_hw:0000000000000000 $t
-     /tmp/cc29Sbe2.s:2475   .text.startup._GLOBAL__sub_I_hw:0000000000000000 _GLOBAL__sub_I_hw
-     /tmp/cc29Sbe2.s:2649   .text.startup._GLOBAL__sub_I_hw:0000000000000044 $d
-     /tmp/cc29Sbe2.s:2663   .init_array:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2726   .bss.lastButtonStateVoice:0000000000000000 lastButtonStateVoice
-     /tmp/cc29Sbe2.s:2720   .bss.lastButtonState2:0000000000000000 lastButtonState2
-     /tmp/cc29Sbe2.s:2714   .bss.lastButtonState1:0000000000000000 lastButtonState1
-     /tmp/cc29Sbe2.s:2701   .bss.currentVoice:0000000000000000 currentVoice
-     /tmp/cc29Sbe2.s:2768   .bss.voice2:0000000000000000 voice2
-     /tmp/cc29Sbe2.s:2761   .bss.voice1:0000000000000000 voice1
-     /tmp/cc29Sbe2.s:2694   .bss.adcConfig:0000000000000000 adcConfig
-     /tmp/cc29Sbe2.s:2754   .bss.osc4:0000000000000000 osc4
-     /tmp/cc29Sbe2.s:2747   .bss.osc3:0000000000000000 osc3
-     /tmp/cc29Sbe2.s:2740   .bss.osc2:0000000000000000 osc2
-     /tmp/cc29Sbe2.s:2733   .bss.osc1:0000000000000000 osc1
-     /tmp/cc29Sbe2.s:2708   .bss.hw:0000000000000000 hw
-     /tmp/cc29Sbe2.s:2678   .rodata:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2690   .bss.adcConfig:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2697   .bss.currentVoice:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2704   .bss.hw:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2715   .bss.lastButtonState1:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2721   .bss.lastButtonState2:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2727   .bss.lastButtonStateVoice:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2729   .bss.osc1:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2736   .bss.osc2:0000000000000000 $d
-ARM GAS  /tmp/cc29Sbe2.s 			page 85
+     /tmp/ccdA0TMp.s:17     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 $t
+     /tmp/ccdA0TMp.s:26     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 _ZN7daisysp10OscillatorD2Ev
+     /tmp/ccdA0TMp.s:26     .text._ZN7daisysp10OscillatorD2Ev:0000000000000000 _ZN7daisysp10OscillatorD1Ev
+     /tmp/ccdA0TMp.s:43     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 $t
+     /tmp/ccdA0TMp.s:51     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 _ZN5daisy9DaisySeedD2Ev
+     /tmp/ccdA0TMp.s:51     .text._ZN5daisy9DaisySeedD2Ev:0000000000000000 _ZN5daisy9DaisySeedD1Ev
+     /tmp/ccdA0TMp.s:92     .text._Z13AudioCallbackPKPKfPPfj:0000000000000000 $t
+     /tmp/ccdA0TMp.s:100    .text._Z13AudioCallbackPKPKfPPfj:0000000000000000 _Z13AudioCallbackPKPKfPPfj
+     /tmp/ccdA0TMp.s:207    .text._Z13AudioCallbackPKPKfPPfj:0000000000000058 $d
+     /tmp/ccdA0TMp.s:215    .text._ZN7daisysp10Oscillator4InitEf:0000000000000000 $t
+     /tmp/ccdA0TMp.s:223    .text._ZN7daisysp10Oscillator4InitEf:0000000000000000 _ZN7daisysp10Oscillator4InitEf
+     /tmp/ccdA0TMp.s:292    .text._ZN7daisysp10Oscillator4InitEf:0000000000000040 $d
+     /tmp/ccdA0TMp.s:297    .text._Z14SetOscWaveformRN7daisysp10OscillatorEi:0000000000000000 $t
+     /tmp/ccdA0TMp.s:305    .text._Z14SetOscWaveformRN7daisysp10OscillatorEi:0000000000000000 _Z14SetOscWaveformRN7daisysp10OscillatorEi
+     /tmp/ccdA0TMp.s:377    .text._Z13QuantizePitchf:0000000000000000 $t
+     /tmp/ccdA0TMp.s:385    .text._Z13QuantizePitchf:0000000000000000 _Z13QuantizePitchf
+     /tmp/ccdA0TMp.s:435    .text._Z13QuantizePitchf:0000000000000038 $d
+     /tmp/ccdA0TMp.s:442    .text._Z15UpdateWaveform1v:0000000000000000 $t
+     /tmp/ccdA0TMp.s:450    .text._Z15UpdateWaveform1v:0000000000000000 _Z15UpdateWaveform1v
+     /tmp/ccdA0TMp.s:496    .text._Z15UpdateWaveform1v:0000000000000024 $d
+     /tmp/ccdA0TMp.s:504    .text._Z15UpdateWaveform2v:0000000000000000 $t
+     /tmp/ccdA0TMp.s:512    .text._Z15UpdateWaveform2v:0000000000000000 _Z15UpdateWaveform2v
+     /tmp/ccdA0TMp.s:558    .text._Z15UpdateWaveform2v:0000000000000024 $d
+     /tmp/ccdA0TMp.s:566    .text.startup.main:0000000000000000 $t
+     /tmp/ccdA0TMp.s:574    .text.startup.main:0000000000000000 main
+     /tmp/ccdA0TMp.s:937    .text.startup.main:000000000000018c $d
+     /tmp/ccdA0TMp.s:962    .text.startup.main:00000000000001e0 $t
+     /tmp/ccdA0TMp.s:2368   .text.startup.main:0000000000000520 $d
+     /tmp/ccdA0TMp.s:2391   .text.startup.main:000000000000054c $t
+     /tmp/ccdA0TMp.s:2460   .text.startup.main:000000000000059c $d
+     /tmp/ccdA0TMp.s:2468   .text.startup._GLOBAL__sub_I_hw:0000000000000000 $t
+     /tmp/ccdA0TMp.s:2475   .text.startup._GLOBAL__sub_I_hw:0000000000000000 _GLOBAL__sub_I_hw
+     /tmp/ccdA0TMp.s:2649   .text.startup._GLOBAL__sub_I_hw:0000000000000044 $d
+     /tmp/ccdA0TMp.s:2663   .init_array:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2726   .bss.lastButtonStateVoice:0000000000000000 lastButtonStateVoice
+     /tmp/ccdA0TMp.s:2720   .bss.lastButtonState2:0000000000000000 lastButtonState2
+     /tmp/ccdA0TMp.s:2714   .bss.lastButtonState1:0000000000000000 lastButtonState1
+     /tmp/ccdA0TMp.s:2701   .bss.currentVoice:0000000000000000 currentVoice
+     /tmp/ccdA0TMp.s:2768   .bss.voice2:0000000000000000 voice2
+     /tmp/ccdA0TMp.s:2761   .bss.voice1:0000000000000000 voice1
+     /tmp/ccdA0TMp.s:2694   .bss.adcConfig:0000000000000000 adcConfig
+     /tmp/ccdA0TMp.s:2754   .bss.osc4:0000000000000000 osc4
+     /tmp/ccdA0TMp.s:2747   .bss.osc3:0000000000000000 osc3
+     /tmp/ccdA0TMp.s:2740   .bss.osc2:0000000000000000 osc2
+     /tmp/ccdA0TMp.s:2733   .bss.osc1:0000000000000000 osc1
+     /tmp/ccdA0TMp.s:2708   .bss.hw:0000000000000000 hw
+     /tmp/ccdA0TMp.s:2678   .rodata:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2690   .bss.adcConfig:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2697   .bss.currentVoice:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2704   .bss.hw:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2715   .bss.lastButtonState1:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2721   .bss.lastButtonState2:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2727   .bss.lastButtonStateVoice:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2729   .bss.osc1:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2736   .bss.osc2:0000000000000000 $d
+ARM GAS  /tmp/ccdA0TMp.s 			page 86
 
 
-     /tmp/cc29Sbe2.s:2743   .bss.osc3:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2750   .bss.osc4:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2757   .bss.voice1:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2764   .bss.voice2:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2771   .rodata._ZN5daisy4seedL3D12E:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2775   .rodata._ZN5daisy4seedL3D12E:0000000000000000 _ZN5daisy4seedL3D12E
-     /tmp/cc29Sbe2.s:2779   .rodata._ZN5daisy4seedL3D13E:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2783   .rodata._ZN5daisy4seedL3D13E:0000000000000000 _ZN5daisy4seedL3D13E
-     /tmp/cc29Sbe2.s:2787   .rodata._ZN5daisy4seedL3D14E:0000000000000000 $d
-     /tmp/cc29Sbe2.s:2791   .rodata._ZN5daisy4seedL3D14E:0000000000000000 _ZN5daisy4seedL3D14E
+     /tmp/ccdA0TMp.s:2743   .bss.osc3:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2750   .bss.osc4:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2757   .bss.voice1:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2764   .bss.voice2:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2771   .rodata._ZN5daisy4seedL3D12E:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2775   .rodata._ZN5daisy4seedL3D12E:0000000000000000 _ZN5daisy4seedL3D12E
+     /tmp/ccdA0TMp.s:2779   .rodata._ZN5daisy4seedL3D13E:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2783   .rodata._ZN5daisy4seedL3D13E:0000000000000000 _ZN5daisy4seedL3D13E
+     /tmp/ccdA0TMp.s:2787   .rodata._ZN5daisy4seedL3D14E:0000000000000000 $d
+     /tmp/ccdA0TMp.s:2791   .rodata._ZN5daisy4seedL3D14E:0000000000000000 _ZN5daisy4seedL3D14E
                            .group:0000000000000000 _ZN7daisysp10OscillatorD5Ev
                            .group:0000000000000000 _ZN5daisy9DaisySeedD5Ev
 

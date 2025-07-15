@@ -44,7 +44,29 @@ float QuantizePitch(float pitch) {
     
     // Convert MIDI note to frequency (A4 = 440Hz)
     return 440.0f * powf(2.0f, (midiNote - 69.0f) / 12.0f);
+
+// To quantize to C major scale instead of chromatic
+// int notesInOctave[] = {0, 2, 4, 5, 7, 9, 11}; // C major scale degrees
+// int octave = (int)midiNote / 12;
+// int noteInOctave = (int)midiNote % 12;
+
+// // Find nearest scale note
+// int closestNote = 0;
+// int minDistance = 12;
+// for(int i = 0; i < 7; i++) {
+//     int distance = abs(noteInOctave - notesInOctave[i]);
+//     if(distance < minDistance) {
+//         minDistance = distance;
+//         closestNote = notesInOctave[i];
+//     }
+// }
+// midiNote = octave * 12 + closestNote;
+
+
 }
+
+
+
 
 void AudioCallback(AudioHandle::InputBuffer in,
                   AudioHandle::OutputBuffer out,
