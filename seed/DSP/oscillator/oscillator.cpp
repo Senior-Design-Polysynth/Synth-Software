@@ -6,65 +6,58 @@ using namespace daisysp;
 using namespace seed;
 
 DaisySeed hw;
-Oscillator osc1, osc2;
-AdcChannelConfig adcConfig[6];  // 6 controls
+Oscillator osc1, osc2, osc3, osc4;  // Four oscillators (two per voice)
+AdcChannelConfig adcConfig[6];      // Six controls
 
-float volume1 = 0.f, volume2 = 0.f;
-float pitch1 = 0.f, pitch2 = 0.f;
-float pulseW1 = 0.f, pulseW2 = 0.f;  // Separate PWM for each oscillator
-int currentWaveform1 = 0, currentWaveform2 = 0;  // Separate waveform states
-bool lastButtonState1 = false, lastButtonState2 = false;  // Separate button states
+// Parameters for both voices
+struct VoiceParams {
+    float vol1, vol2;
+    float pitch1, pitch2;
+    float pw1, pw2;
+    int wave1, wave2;
+} voice1, voice2;
+
+int currentVoice = 0;  // 0 = Voice1, 1 = Voice2
+
+// Button states
+bool lastButtonState1 = false, lastButtonState2 = false, lastButtonStateVoice = false;
+
+// Helper function to set waveform based on index
+void SetOscWaveform(Oscillator& osc, int index) {
+    switch(index) {
+        case 0: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
+        case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
+        case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+    }
+}
 
 void AudioCallback(AudioHandle::InputBuffer in,
                   AudioHandle::OutputBuffer out,
                   size_t size)
 {
-    // Read all potentiometers
-    volume1 = hw.adc.GetFloat(0);  // OSC1 volume
-    pitch1 = hw.adc.GetFloat(1);   // OSC1 pitch
-    pulseW1 = hw.adc.GetFloat(2);  // OSC1 pulse width
-    volume2 = hw.adc.GetFloat(3);  // OSC2 volume
-    pitch2 = hw.adc.GetFloat(4);   // OSC2 pitch
-    pulseW2 = hw.adc.GetFloat(5);  // OSC2 pulse width
-
-    // Configure oscillator 1
-    osc1.SetFreq(50.f + (pitch1 * 1950.f));
-    osc1.SetAmp(volume1);
-    osc1.SetPw(pulseW1);
-
-    // Configure oscillator 2
-    osc2.SetFreq(50.f + (pitch2 * 1950.f));
-    osc2.SetAmp(volume2);
-    osc2.SetPw(pulseW2);
-
     for(size_t i = 0; i < size; i++)
     {
-        float sig1 = osc1.Process();
-        float sig2 = osc2.Process();
-        out[0][i] = sig1 + sig2;
-        out[1][i] = sig1 + sig2;
+        float mixed = osc1.Process() + osc2.Process() + osc3.Process() + osc4.Process();
+        out[0][i] = mixed;
+        out[1][i] = mixed;
     }
 }
 
 void UpdateWaveform1()
 {
-    currentWaveform1 = (currentWaveform1 + 1) % 3;
-    switch(currentWaveform1)
-    {
-        case 0: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
-        case 1: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
-        case 2: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+    if(currentVoice == 0) {
+        voice1.wave1 = (voice1.wave1 + 1) % 3;
+    } else {
+        voice2.wave1 = (voice2.wave1 + 1) % 3;
     }
 }
 
 void UpdateWaveform2()
 {
-    currentWaveform2 = (currentWaveform2 + 1) % 3;
-    switch(currentWaveform2)
-    {
-        case 0: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
-        case 1: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
-        case 2: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+    if(currentVoice == 0) {
+        voice1.wave2 = (voice1.wave2 + 1) % 3;
+    } else {
+        voice2.wave2 = (voice2.wave2 + 1) % 3;
     }
 }
 
@@ -74,24 +67,29 @@ int main(void)
     hw.Init();
     hw.SetAudioBlockSize(4);
 
-    // Initialize oscillators
+    // Initialize all oscillators
     osc1.Init(hw.AudioSampleRate());
     osc2.Init(hw.AudioSampleRate());
-    osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
-    osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
+    osc3.Init(hw.AudioSampleRate());
+    osc4.Init(hw.AudioSampleRate());
+    
+    // Initialize voice parameters
+    voice1 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
+    voice2 = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 2, 2};
 
     // Initialize buttons
-    GPIO button1, button2;
-    button1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC1 waveform
-    button2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC2 waveform
+    GPIO buttonWave1, buttonWave2, buttonVoice;
+    buttonWave1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+    buttonWave2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+    buttonVoice.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
 
     // Configure ADC
-    adcConfig[0].InitSingle(A0);  // OSC1 Volume
-    adcConfig[1].InitSingle(A1);  // OSC1 Pitch
-    adcConfig[2].InitSingle(A2);  // OSC1 PWM
-    adcConfig[3].InitSingle(A3);  // OSC2 Volume
-    adcConfig[4].InitSingle(A4);  // OSC2 Pitch
-    adcConfig[5].InitSingle(A5);  // OSC2 PWM
+    adcConfig[0].InitSingle(A0);
+    adcConfig[1].InitSingle(A1);
+    adcConfig[2].InitSingle(A2);
+    adcConfig[3].InitSingle(A3);
+    adcConfig[4].InitSingle(A4);
+    adcConfig[5].InitSingle(A5);
     hw.adc.Init(adcConfig, 6);
     hw.adc.Start();
 
@@ -99,20 +97,61 @@ int main(void)
 
     while(1)
     {
-        // Handle OSC1 button (D14)
-        bool currentButtonState1 = !button1.Read();  // Invert for active-low
-        if(currentButtonState1 && !lastButtonState1) {
-            UpdateWaveform1();
+        // Update current voice parameters from pots
+        if(currentVoice == 0) {
+            voice1.vol1 = hw.adc.GetFloat(0);
+            voice1.pitch1 = hw.adc.GetFloat(1);
+            voice1.pw1 = hw.adc.GetFloat(2);
+            voice1.vol2 = hw.adc.GetFloat(3);
+            voice1.pitch2 = hw.adc.GetFloat(4);
+            voice1.pw2 = hw.adc.GetFloat(5);
+        } else {
+            voice2.vol1 = hw.adc.GetFloat(0);
+            voice2.pitch1 = hw.adc.GetFloat(1);
+            voice2.pw1 = hw.adc.GetFloat(2);
+            voice2.vol2 = hw.adc.GetFloat(3);
+            voice2.pitch2 = hw.adc.GetFloat(4);
+            voice2.pw2 = hw.adc.GetFloat(5);
         }
+
+        // Voice 1 oscillators
+        osc1.SetFreq(50.f + (voice1.pitch1 * 1950.f));
+        osc1.SetAmp(voice1.vol1);
+        osc1.SetPw(voice1.pw1);
+        SetOscWaveform(osc1, voice1.wave1);
+        
+        osc2.SetFreq(50.f + (voice1.pitch2 * 1950.f));
+        osc2.SetAmp(voice1.vol2);
+        osc2.SetPw(voice1.pw2);
+        SetOscWaveform(osc2, voice1.wave2);
+        
+        // Voice 2 oscillators
+        osc3.SetFreq(50.f + (voice2.pitch1 * 1950.f));
+        osc3.SetAmp(voice2.vol1);
+        osc3.SetPw(voice2.pw1);
+        SetOscWaveform(osc3, voice2.wave1);
+        
+        osc4.SetFreq(50.f + (voice2.pitch2 * 1950.f));
+        osc4.SetAmp(voice2.vol2);
+        osc4.SetPw(voice2.pw2);
+        SetOscWaveform(osc4, voice2.wave2);
+
+        // Handle waveform buttons
+        bool currentButtonState1 = !buttonWave1.Read();
+        if(currentButtonState1 && !lastButtonState1) UpdateWaveform1();
         lastButtonState1 = currentButtonState1;
         
-        // Handle OSC2 button (D13)
-        bool currentButtonState2 = !button2.Read();  // Invert for active-low
-        if(currentButtonState2 && !lastButtonState2) {
-            UpdateWaveform2();
-        }
+        bool currentButtonState2 = !buttonWave2.Read();
+        if(currentButtonState2 && !lastButtonState2) UpdateWaveform2();
         lastButtonState2 = currentButtonState2;
         
-        System::Delay(10);  // Debounce delay
+        // Handle voice select button
+        bool currentButtonStateVoice = !buttonVoice.Read();
+        if(currentButtonStateVoice && !lastButtonStateVoice) {
+            currentVoice = 1 - currentVoice;  // Toggle between 0 and 1
+        }
+        lastButtonStateVoice = currentButtonStateVoice;
+        
+        System::Delay(10);
     }
 }
