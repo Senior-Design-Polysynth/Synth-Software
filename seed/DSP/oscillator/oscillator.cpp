@@ -6,8 +6,8 @@ using namespace daisysp;
 using namespace seed;
 
 DaisySeed hw;
-Oscillator osc1, osc2, osc3, osc4;  // Four oscillators (two per voice)
-AdcChannelConfig adcConfig[6];      // Six controls
+Oscillator osc1, osc2, osc3, osc4;
+AdcChannelConfig adcConfig[6];
 
 // Parameters for both voices
 struct VoiceParams {
@@ -17,9 +17,7 @@ struct VoiceParams {
     int wave1, wave2;
 } voice1, voice2;
 
-int currentVoice = 0;  // 0 = Voice1, 1 = Voice2
-
-// Button states
+int currentVoice = 0;
 bool lastButtonState1 = false, lastButtonState2 = false, lastButtonStateVoice = false;
 
 // Helper function to set waveform based on index
@@ -29,6 +27,23 @@ void SetOscWaveform(Oscillator& osc, int index) {
         case 1: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
         case 2: osc.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
     }
+}
+
+// Convert pitch value to quantized frequency (chromatic scale)
+float QuantizePitch(float pitch) {
+    // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
+    const float minNote = 24.0f;
+    const float maxNote = 108.0f;
+    const float range = maxNote - minNote;
+    
+    // Calculate MIDI note number
+    float midiNote = minNote + (pitch * range);
+    
+    // Quantize to nearest integer note
+    midiNote = roundf(midiNote);
+    
+    // Convert MIDI note to frequency (A4 = 440Hz)
+    return 440.0f * powf(2.0f, (midiNote - 69.0f) / 12.0f);
 }
 
 void AudioCallback(AudioHandle::InputBuffer in,
@@ -114,24 +129,24 @@ int main(void)
             voice2.pw2 = hw.adc.GetFloat(5);
         }
 
-        // Voice 1 oscillators
-        osc1.SetFreq(50.f + (voice1.pitch1 * 1950.f));
+        // Voice 1 oscillators (with quantized pitch)
+        osc1.SetFreq(QuantizePitch(voice1.pitch1));
         osc1.SetAmp(voice1.vol1);
         osc1.SetPw(voice1.pw1);
         SetOscWaveform(osc1, voice1.wave1);
         
-        osc2.SetFreq(50.f + (voice1.pitch2 * 1950.f));
+        osc2.SetFreq(QuantizePitch(voice1.pitch2));
         osc2.SetAmp(voice1.vol2);
         osc2.SetPw(voice1.pw2);
         SetOscWaveform(osc2, voice1.wave2);
         
-        // Voice 2 oscillators
-        osc3.SetFreq(50.f + (voice2.pitch1 * 1950.f));
+        // Voice 2 oscillators (with quantized pitch)
+        osc3.SetFreq(QuantizePitch(voice2.pitch1));
         osc3.SetAmp(voice2.vol1);
         osc3.SetPw(voice2.pw1);
         SetOscWaveform(osc3, voice2.wave1);
         
-        osc4.SetFreq(50.f + (voice2.pitch2 * 1950.f));
+        osc4.SetFreq(QuantizePitch(voice2.pitch2));
         osc4.SetAmp(voice2.vol2);
         osc4.SetPw(voice2.pw2);
         SetOscWaveform(osc4, voice2.wave2);
@@ -148,7 +163,7 @@ int main(void)
         // Handle voice select button
         bool currentButtonStateVoice = !buttonVoice.Read();
         if(currentButtonStateVoice && !lastButtonStateVoice) {
-            currentVoice = 1 - currentVoice;  // Toggle between 0 and 1
+            currentVoice = 1 - currentVoice;
         }
         lastButtonStateVoice = currentButtonStateVoice;
         
