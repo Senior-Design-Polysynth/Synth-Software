@@ -238,9 +238,9 @@ int main(void)
 
     // Initialize MIDI
     MidiUartHandler::Config midi_cfg;
-    midi_cfg.transport_config.periph = UartHandler::Config::Peripheral::USART_1;  // Usually D9 RX
-    midi_cfg.transport_config.rx = D9;
-    midi_cfg.transport_config.tx = D10; // Not required for input but included for completeness
+    midi_cfg.transport_config.periph = UartHandler::Config::Peripheral::USART_1;  // Usually D30 RX
+    midi_cfg.transport_config.rx = D30;
+    midi_cfg.transport_config.tx = D29; // Not required for input but included for completeness
     // midi_cfg.transport_config.baudrate = 31250; // Not needed, default is 31250 for MIDI
     midi.Init(midi_cfg);
 
