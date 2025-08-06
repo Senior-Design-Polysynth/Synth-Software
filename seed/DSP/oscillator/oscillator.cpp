@@ -256,34 +256,7 @@ int main(void)
             HandleMidiMessage(midi.PopEvent());
         }
 
-        // Handle OSC1 button (D14)
-        bool currentButtonState1 = !button1.Read();
-        if(currentButtonState1 && !lastButtonState1) {
-            UpdateWaveform1();
-        }
-        lastButtonState1 = currentButtonState1;
         
-        // Handle OSC2 button (D13)
-        bool currentButtonState2 = !button2.Read();
-        if(currentButtonState2 && !lastButtonState2) {
-            UpdateWaveform2();
-        }
-        lastButtonState2 = currentButtonState2;
-        
-        // Handle quantization mode button (D12)
-        bool currentButtonStateQuant = !buttonQuant.Read();
-        if(currentButtonStateQuant && !lastButtonStateQuant) {
-            // Cycle through quantization modes: OFF → CHROMATIC → MAJOR → MINOR → OFF...
-            quantizeMode = static_cast<QuantMode>((static_cast<int>(quantizeMode) + 1) % 4);
-        }
-        lastButtonStateQuant = currentButtonStateQuant;
-        
-        // Handle scale lock button (D11)
-        bool currentButtonStateScaleLock = !buttonScaleLock.Read();
-        if(currentButtonStateScaleLock && !lastButtonStateScaleLock) {
-            scaleLockEnabled = !scaleLockEnabled;
-        }
-        lastButtonStateScaleLock = currentButtonStateScaleLock;
         
         System::Delay(10); // Prevent busy loop, adjust as needed
     }
