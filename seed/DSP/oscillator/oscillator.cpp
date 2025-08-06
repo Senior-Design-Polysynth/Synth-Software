@@ -249,6 +249,13 @@ int main(void)
 
     while(1)
     {
+        // MIDI event processing
+        midi.Listen();
+        while(midi.HasEvents())
+        {
+            HandleMidiMessage(midi.PopEvent());
+        }
+
         // Handle OSC1 button (D14)
         bool currentButtonState1 = !button1.Read();
         if(currentButtonState1 && !lastButtonState1) {
