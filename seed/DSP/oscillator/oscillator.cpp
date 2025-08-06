@@ -1,5 +1,6 @@
 #include "daisysp.h"
 #include "daisy_seed.h"
+#include "hid/midi.h"
 
 using namespace daisy;
 using namespace daisysp;
@@ -17,6 +18,12 @@ int currentWaveform1 = 0, currentWaveform2 = 0;
 bool lastButtonState1 = false, lastButtonState2 = false;
 bool lastButtonStateQuant = false;
 bool lastButtonStateScaleLock = false;
+
+// MIDI input state
+MidiUartHandler midi;
+int currentMidiNote = -1;      // -1 if no note
+float midiVelocity = 0.0f;     // 0.0 to 1.0
+
 
 // Quantization modes
 enum QuantMode { OFF, CHROMATIC, MAJOR, MINOR };
@@ -90,6 +97,26 @@ float QuantizePitch(float pitch, QuantMode mode, int root) {
     return 440.0f * powf(2.0f, (midiNote - 69.0f) / 12.0f);
 }
 
+// MIDI event handling
+void HandleMidiMessage(MidiEvent m) {
+    if (m.type == NoteOn && m.data[1] > 0) {
+        currentMidiNote = m.data[0];
+        midiVelocity = m.data[1] / 127.0f;
+        float freq = mtof(currentMidiNote);
+        osc1.SetFreq(freq);
+        osc2.SetFreq(freq * 1.01f); // subtle detune
+        osc1.SetAmp(midiVelocity);
+        osc2.SetAmp(midiVelocity);
+    } else if (m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0)) {
+        if (m.data[0] == currentMidiNote) {
+            osc1.SetAmp(0.0f);
+            osc2.SetAmp(0.0f);
+            currentMidiNote = -1;
+            midiVelocity = 0.0f;
+        }
+    }
+}
+
 void AudioCallback(AudioHandle::InputBuffer in,
                   AudioHandle::OutputBuffer out,
                   size_t size)
@@ -109,34 +136,43 @@ void AudioCallback(AudioHandle::InputBuffer in,
     int root = static_cast<int>(keyPot * 11.99f);  // 0-11 (C to B)
 
     // Configure oscillator frequencies
-    float freq1, freq2;
-    
-    if (quantizeMode == OFF) {
-        freq1 = 50.f + (pitch1 * 1950.f);
-        freq2 = 50.f + (pitch2 * 1950.f);
+    float freq1, freq2, v1, v2;
+    // MIDI override: if MIDI note is held, use that
+    if (currentMidiNote >= 0) {
+        freq1 = mtof(currentMidiNote);
+        freq2 = freq1 * 1.01f; // subtle detune
+        v1 = midiVelocity;
+        v2 = midiVelocity;
     } else {
-        // When scale lock is enabled, both oscillators use OSC1's pitch position
-        // but maintain their relative offsets
-        if (scaleLockEnabled && quantizeMode != CHROMATIC) {
-            // Calculate base pitch position
-            float basePitch = (pitch1 + pitch2) / 2.0f;
-            
-            // Apply OSC1 and OSC2 as offsets from the base
-            freq1 = QuantizePitch(basePitch + (pitch1 - 0.5f) * 0.1f, quantizeMode, root);
-            freq2 = QuantizePitch(basePitch + (pitch2 - 0.5f) * 0.1f, quantizeMode, root);
+        if (quantizeMode == OFF) {
+            freq1 = 50.f + (pitch1 * 1950.f);
+            freq2 = 50.f + (pitch2 * 1950.f);
         } else {
-            // Standard independent quantization
-            freq1 = QuantizePitch(pitch1, quantizeMode, root);
-            freq2 = QuantizePitch(pitch2, quantizeMode, root);
+            // When scale lock is enabled, both oscillators use OSC1's pitch position
+            // but maintain their relative offsets
+            if (scaleLockEnabled && quantizeMode != CHROMATIC) {
+                // Calculate base pitch position
+                float basePitch = (pitch1 + pitch2) / 2.0f;
+                
+                // Apply OSC1 and OSC2 as offsets from the base
+                freq1 = QuantizePitch(basePitch + (pitch1 - 0.5f) * 0.1f, quantizeMode, root);
+                freq2 = QuantizePitch(basePitch + (pitch2 - 0.5f) * 0.1f, quantizeMode, root);
+            } else {
+                // Standard independent quantization
+                freq1 = QuantizePitch(pitch1, quantizeMode, root);
+                freq2 = QuantizePitch(pitch2, quantizeMode, root);
+            }
         }
+        v1 = volume1;
+        v2 = volume2;   
     }
     
     osc1.SetFreq(freq1);
-    osc1.SetAmp(volume1);
+    osc1.SetAmp(v1);
     osc1.SetPw(pulseW1);
 
     osc2.SetFreq(freq2);
-    osc2.SetAmp(volume2);
+    osc2.SetAmp(v2);
     osc2.SetPw(pulseW2);
 
     for(size_t i = 0; i < size; i++)
@@ -200,10 +236,26 @@ int main(void)
     hw.adc.Init(adcConfig, 7);    // 7 channels now
     hw.adc.Start();
 
+    // Initialize MIDI
+    MidiUartHandler::Config midi_cfg;
+    midi_cfg.transport_config.periph = UartHandler::Config::Peripheral::USART_1;  // Usually D30 RX
+    midi_cfg.transport_config.rx = D30;
+    midi_cfg.transport_config.tx = D29; // Not required for input but included for completeness
+    // midi_cfg.transport_config.baudrate = 31250; // Not needed, default is 31250 for MIDI
+    midi.Init(midi_cfg);
+
     hw.StartAudio(AudioCallback);
+
 
     while(1)
     {
+        // MIDI event processing
+        midi.Listen();
+        while(midi.HasEvents())
+        {
+            HandleMidiMessage(midi.PopEvent());
+        }
+
         // Handle OSC1 button (D14)
         bool currentButtonState1 = !button1.Read();
         if(currentButtonState1 && !lastButtonState1) {
@@ -233,6 +285,6 @@ int main(void)
         }
         lastButtonStateScaleLock = currentButtonStateScaleLock;
         
-        System::Delay(10);
+        System::Delay(10); // Prevent busy loop, adjust as needed
     }
 }
