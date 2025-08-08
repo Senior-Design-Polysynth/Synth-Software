@@ -8,7 +8,6 @@ using namespace daisysp;
 using namespace seed;
 
 DaisySeed hw;
-Oscillator osc1, osc2;
 AdcChannelConfig adcConfig[7];
 
 float volume1 = 0.f, volume2 = 0.f;
@@ -16,6 +15,8 @@ float pulseW1 = 0.f, pulseW2 = 0.f;
 float detune = 0.f;
 
 constexpr int kNumVoices = 2;
+Oscillator osc1[kNumVoices];
+Oscillator osc2[kNumVoices];
 constexpr int kNumKeys = 6;
 
 struct Voice {
@@ -106,51 +107,48 @@ void AudioCallback(AudioHandle::InputBuffer in,
     // Read all potentiometers
     volume1 = hw.adc.GetFloat(0);  // OSC1 volume
     pulseW1 = hw.adc.GetFloat(1);  // OSC1 pulse width
-
     volume2 = 1.0f - hw.adc.GetFloat(3);  // OSC2 volume
     pulseW2 = 1.0f - hw.adc.GetFloat(4);  // OSC2 pulse width
-    detune = 1.0f - hw.adc.GetFloat(5);   // OSC2 detune
+    detune  = 1.0f - hw.adc.GetFloat(5);  // OSC2 detune
 
     //Calculate detune in cents (-50 to +50 cents)
     float detuneCents = (detune - 0.5f) * 100.0f;
     float detuneFactor = powf(2.0f, detuneCents / 1200.0f);
 
-    // Voice management (osc1 = voices[0], osc2 = voices[1])
-    if(voices[0].active)
+    // Process each voice
+    for(int v = 0; v < kNumVoices; ++v)
     {
-        float freq1 = KeyNoteFreq(voices[0].note_id);
-        osc1.SetFreq(freq1);
-        osc1.SetAmp(volume1);
-        //osc1.SetPw(pulseW1);
+        if(voices[v].active)
+        {
+            float freq = KeyNoteFreq(voices[v].note_id);
+            osc1[v].SetFreq(freq);
+            osc1[v].SetAmp(volume1);
+            osc1[v].SetPw(pulseW1);
+
+            osc2[v].SetFreq(freq * detuneFactor);
+            osc2[v].SetAmp(volume2);
+            osc2[v].SetPw(pulseW2);
+        }
+        else
+        {
+            osc1[v].SetAmp(0.0f);
+            osc2[v].SetAmp(0.0f);
+        }
     }
-    else
-    {
-        osc1.SetAmp(0.0f);
-    }
 
-    if(voices[1].active)
-    {
-        float freq2 = KeyNoteFreq(voices[1].note_id);
-        osc2.SetFreq(freq2 * detuneFactor);
-        osc2.SetAmp(volume2);
-        //osc2.SetPw(pulseW2);
-    }
-    else
-    {
-        osc2.SetAmp(0.0f);
-    } 
-
-
-    osc1.SetPw(pulseW1);
-    osc2.SetPw(pulseW2);
-
+    // Mix the outputs of all voices
     for(size_t i = 0; i < size; i++)
     {
-        float sig1 = osc1.Process();
-        float sig2 = osc2.Process();
-        out[0][i] = sig1 + sig2;
-        out[1][i] = sig1 + sig2;
+        float mix = 0.0f;
+        for(int v = 0; v < kNumVoices; ++v)
+        {
+            mix += osc1[v].Process();
+            mix += osc2[v].Process();
+        }
+        out[0][i] = mix * 0.5f; // scale to avoid clipping
+        out[1][i] = mix * 0.5f;
     }
+    
 }
 
 // MIDI event handling
@@ -168,10 +166,13 @@ int main(void)
     hw.Init();
     hw.SetAudioBlockSize(4);
 
-    osc1.Init(hw.AudioSampleRate());
-    osc2.Init(hw.AudioSampleRate());
-    osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
-    osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
+    for(int v = 0; v < kNumVoices; ++v) 
+    {
+    osc1[v].Init(hw.AudioSampleRate());
+    osc2[v].Init(hw.AudioSampleRate());
+    osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
+    osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
+    }
 
     daisy::Pin button_pins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
     for(int i=0;i<kNumKeys;++i)
