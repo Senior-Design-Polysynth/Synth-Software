@@ -2,6 +2,7 @@
 #include "daisy_seed.h"
 #include "hid/midi.h"
 
+
 using namespace daisy;
 using namespace daisysp;
 using namespace seed;
@@ -9,6 +10,10 @@ using namespace seed;
 DaisySeed hw;
 Oscillator osc1, osc2;
 AdcChannelConfig adcConfig[7];
+
+float volume1 = 0.f, volume2 = 0.f;
+float pulseW1 = 0.f, pulseW2 = 0.f;
+float detune = 0.f;
 
 constexpr int kNumVoices = 2;
 constexpr int kNumKeys = 6;
@@ -53,35 +58,88 @@ void VoiceNoteOn(int note_id, bool is_midi)
 void VoiceNoteOff(int note_id, bool is_midi)
 {
     for(int i=0;i<kNumVoices;++i)
+    {
+        // Check if the voice is active and matches the note_id and is_midi flag}
         if(voices[i].active && voices[i].note_id==note_id && voices[i].is_midi==is_midi)
+        {
             voices[i].active = false;
+        }
+        // If a voice is stolen, we need to reassign held notes
+            ReassignHeldNotes();
+    
+    }
 }
+
+
+// Call this after VoiceNoteOff or after a voice is stolen
+void ReassignHeldNotes()
+{
+    for(int i = 0; i < kNumKeys; ++i)
+    {
+        if(prev_state[i]) // button is held
+        {
+            // Check if this note is already assigned to a voice
+            bool assigned = false;
+            for(int v = 0; v < kNumVoices; ++v)
+            {
+                if(voices[v].active && voices[v].note_id == i && !voices[v].is_midi)
+                {
+                    assigned = true;
+                    break;
+                }
+            }
+            // If not assigned, assign it to a free voice
+            if(!assigned)
+                VoiceNoteOn(i, false);
+        }
+    }
+}
+
+
+
 
 // Audio callback
 void AudioCallback(AudioHandle::InputBuffer in,
                   AudioHandle::OutputBuffer out,
                   size_t size)
 {
-    float pulseW1, pulseW2;
-    pulseW1 = hw.adc.GetFloat(2);
-    pulseW2 = 1.0f - hw.adc.GetFloat(5);
+    // Read all potentiometers
+    volume1 = hw.adc.GetFloat(0);  // OSC1 volume
+    pulseW1 = hw.adc.GetFloat(1);  // OSC1 pulse width
+
+    volume2 = 1.0f - hw.adc.GetFloat(3);  // OSC2 volume
+    pulseW2 = 1.0f - hw.adc.GetFloat(4);  // OSC2 pulse width
+    detune = 1.0f - hw.adc.GetFloat(5);   // OSC2 detune
+
+    //Calculate detune in cents (-50 to +50 cents)
+    float detuneCents = (detune - 0.5f) * 100.0f;
+    float detuneFactor = powf(2.0f, detuneCents / 1200.0f);
 
     // Voice management (osc1 = voices[0], osc2 = voices[1])
     if(voices[0].active)
     {
-        osc1.SetFreq(KeyNoteFreq(voices[0].note_id));
-        osc1.SetAmp(1.0f);
+        float freq1 = KeyNoteFreq(voices[0].note_id);
+        osc1.SetFreq(freq1);
+        osc1.SetAmp(volume1);
+        //osc1.SetPw(pulseW1);
     }
     else
+    {
         osc1.SetAmp(0.0f);
+    }
 
     if(voices[1].active)
     {
-        osc2.SetFreq(KeyNoteFreq(voices[1].note_id));
-        osc2.SetAmp(1.0f);
+        float freq2 = KeyNoteFreq(voices[1].note_id);
+        osc2.SetFreq(freq2 * detuneFactor);
+        osc2.SetAmp(volume2);
+        //osc2.SetPw(pulseW2);
     }
     else
+    {
         osc2.SetAmp(0.0f);
+    } 
+
 
     osc1.SetPw(pulseW1);
     osc2.SetPw(pulseW2);
@@ -112,20 +170,20 @@ int main(void)
 
     osc1.Init(hw.AudioSampleRate());
     osc2.Init(hw.AudioSampleRate());
-    osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
-    osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
+    osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
+    osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
 
     daisy::Pin button_pins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
     for(int i=0;i<kNumKeys;++i)
         keybutton[i].Init(button_pins[i], GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
 
-    adcConfig[0].InitSingle(A0);  // OSC1 Volume
-    adcConfig[1].InitSingle(A1);  // OSC1 Pitch
-    adcConfig[2].InitSingle(A2);  // OSC1 PWM
-    adcConfig[3].InitSingle(A3);  // OSC2 Volume
-    adcConfig[4].InitSingle(A4);  // OSC2 Pitch
-    adcConfig[5].InitSingle(A5);  // OSC2 PWM
-    adcConfig[6].InitSingle(A6);  // Key/Root control
+    adcConfig[0].InitSingle(A0);    // OSC1 Volume
+    adcConfig[1].InitSingle(A1);    // OSC1 Pulse Width
+    //adcConfig[2].InitSingle(A2);  // OSC1 Detune (not used)
+    adcConfig[3].InitSingle(A3);    // OSC2 Volume
+    adcConfig[4].InitSingle(A4);    // OSC2 Pulse Width
+    adcConfig[5].InitSingle(A5);    // OSC2 Detune
+    //adcConfig[6].InitSingle(A6);  // unused
     hw.adc.Init(adcConfig, 7);
     hw.adc.Start();
 
