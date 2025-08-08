@@ -56,22 +56,6 @@ void VoiceNoteOn(int note_id, bool is_midi)
     voices[v].is_midi = is_midi;
 }
 
-void VoiceNoteOff(int note_id, bool is_midi)
-{
-    for(int i=0;i<kNumVoices;++i)
-    {
-        // Check if the voice is active and matches the note_id and is_midi flag}
-        if(voices[i].active && voices[i].note_id==note_id && voices[i].is_midi==is_midi)
-        {
-            voices[i].active = false;
-        }
-        // If a voice is stolen, we need to reassign held notes
-            ReassignHeldNotes();
-    
-    }
-}
-
-
 // Call this after VoiceNoteOff or after a voice is stolen
 void ReassignHeldNotes()
 {
@@ -96,6 +80,20 @@ void ReassignHeldNotes()
     }
 }
 
+void VoiceNoteOff(int note_id, bool is_midi)
+{
+    for(int i=0;i<kNumVoices;++i)
+    {
+        // Check if the voice is active and matches the note_id and is_midi flag}
+        if(voices[i].active && voices[i].note_id==note_id && voices[i].is_midi==is_midi)
+        {
+            voices[i].active = false;
+        }
+        // If a voice is stolen, we need to reassign held notes
+            ReassignHeldNotes();
+    
+    }
+}
 
 
 
