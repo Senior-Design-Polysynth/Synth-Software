@@ -23,12 +23,13 @@ struct Voice {
     bool active;
     int note_id;   // button index 0-5 or MIDI note number
     bool is_midi;  // true = midi, false = button
+    uint32_t timestamp; // add this line
 };
 
 Voice voices[kNumVoices];
 GPIO keybutton[kNumKeys];
 bool prev_state[kNumKeys] = {0};
-int lastVoiceUsed = 0;
+uint32_t note_counter = 0;
 
 MidiUartHandler midi;
 
@@ -50,10 +51,23 @@ void VoiceNoteOn(int note_id, bool is_midi)
     for(int i=0;i<kNumVoices;++i)
         if(!voices[i].active) { v=i; break; }
     // if none, steal
-    if(v == -1) { v=lastVoiceUsed; lastVoiceUsed=(lastVoiceUsed+1)%kNumVoices; }
+    if(v == -1) 
+    { 
+       uint32_t oldest = voices[0].timestamp;
+        v = 0;
+        for(int i=1;i<kNumVoices;++i)
+        {
+            if(voices[i].timestamp < oldest)
+            {
+                oldest = voices[i].timestamp;
+                v = i;
+            }
+        }
+    }
     voices[v].active = true;
     voices[v].note_id = note_id;
     voices[v].is_midi = is_midi;
+    voices[v].timestamp = ++note_counter;
 }
 
 // Call this after VoiceNoteOff or after a voice is stolen
@@ -69,6 +83,7 @@ void ReassignHeldNotes()
             {
                 if(voices[v].active && voices[v].note_id == i && !voices[v].is_midi)
                 {
+                    // If already assigned, skip to next button
                     assigned = true;
                     break;
                 }
@@ -77,6 +92,7 @@ void ReassignHeldNotes()
             if(!assigned)
                 VoiceNoteOn(i, false);
         }
+        
     }
 }
 
@@ -89,12 +105,19 @@ void VoiceNoteOff(int note_id, bool is_midi)
         {
             voices[i].active = false;
         }
-        // If a voice is stolen, we need to reassign held notes
-            ReassignHeldNotes();
-    
     }
+    // Reassign held notes after turning off a voice
+    ReassignHeldNotes();
 }
 
+// MIDI event handling
+void HandleMidiMessage(MidiEvent m)
+{
+    if(m.type == NoteOn && m.data[1] > 0)
+        VoiceNoteOn(m.data[0], true);
+    else if(m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0))
+        VoiceNoteOff(m.data[0], true);
+}
 
 
 // Audio callback
@@ -147,15 +170,6 @@ void AudioCallback(AudioHandle::InputBuffer in,
         out[1][i] = mix * 0.5f;
     }
     
-}
-
-// MIDI event handling
-void HandleMidiMessage(MidiEvent m)
-{
-    if(m.type == NoteOn && m.data[1] > 0)
-        VoiceNoteOn(m.data[0], true);
-    else if(m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0))
-        VoiceNoteOff(m.data[0], true);
 }
 
 int main(void)
