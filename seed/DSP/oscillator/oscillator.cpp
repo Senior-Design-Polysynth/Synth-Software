@@ -1,172 +1,255 @@
+// File: src/button_synth_two_voices.cpp
+// Purpose: Two-voice, two-osc-per-voice synth driven by hardware buttons **and** external MIDI over DIN.
+// Behavior:
+//  - Up to 2 simultaneous notes total (buttons + MIDI combined) => 2 voices, each with 2 oscillators.
+//  - On 3rd (or more) press while 2 voices active: steal the OLDEST held note (fair voice stealing).
+//  - If a stolen note remains held and the stealing note releases, the voice is returned to the stolen note (restitution).
+//  - Buttons map to fixed notes; MIDI uses incoming note numbers.
+// Why: Unified allocator across buttons & MIDI, minimal races, fixed ADC config, edge-driven logic.
+
 #include "daisysp.h"
 #include "daisy_seed.h"
+#include "hid/midi.h"
 
 using namespace daisy;
 using namespace daisysp;
 using namespace seed;
 
+// ===== Hardware =====
 DaisySeed hw;
-Oscillator osc1, osc2;
-AdcChannelConfig adcConfig[7];  // 7 controls (added key control)
+static constexpr int kNumVoices = 2;
+static constexpr int kNumKeys   = 6;               // hardware buttons
+static const Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
+GPIO keybutton[kNumKeys];
 
+// ===== ADC knobs (5 contiguous entries) =====
+// order: A0(OSC1 Vol), A1(OSC1 PW), A3(OSC2 Vol), A4(OSC2 PW), A5(OSC2 Detune)
+static constexpr int kNumAdc = 5;
+AdcChannelConfig adc_cfg[kNumAdc];
+
+// ===== Params read each audio block =====
 float volume1 = 0.f, volume2 = 0.f;
-float pitch1 = 0.f, pitch2 = 0.f;
-float pulseW1 = 0.f, pulseW2 = 0.f;
-float keyPot = 0.f;  // Key control potentiometer
-int currentWaveform1 = 0, currentWaveform2 = 0;
-bool lastButtonState1 = false, lastButtonState2 = false;
-bool lastButtonStateQuant = false;
-bool lastButtonStateScaleLock = false;
+float pulseW1 = 0.5f, pulseW2 = 0.5f;
+float detune  = 0.5f; // 0..1 => -50..+50 cents
 
-// Quantization modes
-enum QuantMode { OFF, CHROMATIC, MAJOR, MINOR };
-QuantMode quantizeMode = OFF;
+// ===== Synthesis =====
+Oscillator osc1[kNumVoices];
+Oscillator osc2[kNumVoices];
 
-// Scale lock mode - when true, both oscillators use the same scale notes
-bool scaleLockEnabled = false;
+// ===== MIDI =====
+MidiUartHandler midi;
 
-// Convert pitch value to quantized frequency
-float QuantizePitch(float pitch, QuantMode mode, int root) {
-    // Define chromatic scale range (MIDI notes 24-108 = C1-C8)
-    const float minNote = 24.0f;
-    const float maxNote = 108.0f;
-    const float range = maxNote - minNote;
-    
-    // Calculate MIDI note number
-    float midiNote = minNote + (pitch * range);
-    
-    if (mode == CHROMATIC) {
-        // Quantize to nearest semitone
-        midiNote = roundf(midiNote);
-    }
-    else if (mode == MAJOR || mode == MINOR) {
-        // Define scale patterns
-        const int majorScale[] = {0, 2, 4, 5, 7, 9, 11}; // Major scale intervals
-        const int minorScale[] = {0, 2, 3, 5, 7, 8, 10}; // Minor scale intervals
-        
-        const int* scale = (mode == MAJOR) ? majorScale : minorScale;
-        const int numNotes = 7;
-        
-        // Calculate base octave and note within octave
-        int octave = static_cast<int>(midiNote) / 12;
-        float noteInOctave = midiNote - (octave * 12.0f);
-        
-        // Find closest note in scale pattern
-        float minDistance = 12.0f;
-        int closestScaleNote = 0;
-        
-        for (int i = 0; i < numNotes; i++) {
-            // Calculate scale note with root applied
-            float scaleNote = (scale[i] + root) % 12;
-            
-            // Calculate distance to scale note
-            float distance = fabs(noteInOctave - scaleNote);
-            
-            // Check if closer in next octave
-            float nextOctaveDist = fabs(noteInOctave - (scaleNote + 12.0f));
-            if (nextOctaveDist < distance) {
-                distance = nextOctaveDist;
-                scaleNote += 12.0f;
-            }
-            
-            // Check if closer in previous octave
-            float prevOctaveDist = fabs(noteInOctave - (scaleNote - 12.0f));
-            if (prevOctaveDist < distance) {
-                distance = prevOctaveDist;
-                scaleNote -= 12.0f;
-            }
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestScaleNote = static_cast<int>(scaleNote);
-            }
-        }
-        
-        // Calculate final quantized MIDI note
-        midiNote = octave * 12 + closestScaleNote;
-    }
-    
-    // Convert MIDI note to frequency (A4 = 440Hz)
-    return 440.0f * powf(2.0f, (midiNote - 69.0f) / 12.0f);
+// Buttons -> fixed MIDI notes
+static inline float ButtonNoteFreq(int btn_id)
+{
+    static const uint8_t kMidiNotes[kNumKeys] = {60, 62, 64, 65, 67, 69}; // C4 D4 E4 F4 G4 A4
+    return mtof(kMidiNotes[btn_id]);
 }
 
-void AudioCallback(AudioHandle::InputBuffer in,
-                  AudioHandle::OutputBuffer out,
-                  size_t size)
+// ===== Voice/Allocation State =====
+struct Voice {
+    bool     active = false;
+    bool     is_midi = false; // owner type
+    int      key_id = -1;     // button index 0..5 or MIDI note 0..127
+};
+
+Voice voices[kNumVoices];
+
+// Per-button state
+bool     btn_held[kNumKeys]   = {false};
+int      btn_voice[kNumKeys];              // -1 if none, else voice index
+uint32_t btn_hold_ts[kNumKeys];            // press order
+
+// Per-MIDI-note state
+static constexpr int kNumMidiNotes = 128;
+bool     midi_held[kNumMidiNotes] = {false};
+int      midi_voice[kNumMidiNotes];        // -1 if none
+uint32_t midi_hold_ts[kNumMidiNotes];
+
+uint32_t global_press_counter = 0; // monotonic; used for order only
+
+// ---- Small helpers (keep logic readable) ----
+static inline bool   GetHeld(bool is_midi, int id)               { return is_midi ? midi_held[id]      : btn_held[id]; }
+static inline void   SetHeld(bool is_midi, int id, bool v)       { if(is_midi) midi_held[id]=v; else btn_held[id]=v; }
+static inline int    GetOwnerVoice(bool is_midi, int id)         { return is_midi ? midi_voice[id]     : btn_voice[id]; }
+static inline void   SetOwnerVoice(bool is_midi, int id, int vi) { if(is_midi) midi_voice[id]=vi; else btn_voice[id]=vi; }
+static inline uint32_t GetTs(bool is_midi, int id)               { return is_midi ? midi_hold_ts[id]   : btn_hold_ts[id]; }
+static inline void     SetTs(bool is_midi, int id, uint32_t ts)  { if(is_midi) midi_hold_ts[id]=ts; else btn_hold_ts[id]=ts; }
+static inline float  KeyFreq(bool is_midi, int id)               { return is_midi ? mtof((float)id) : ButtonNoteFreq(id); }
+
+struct KeyRef { bool is_midi=false; int id=-1; bool valid=false; };
+
+static int FindFreeVoice()
 {
-    // Read all potentiometers
-    volume1 = hw.adc.GetFloat(0);  // OSC1 volume
-    pitch1 = hw.adc.GetFloat(1);   // OSC1 pitch
-    pulseW1 = hw.adc.GetFloat(2);  // OSC1 pulse width
+    for(int v = 0; v < kNumVoices; ++v)
+        if(!voices[v].active) return v;
+    return -1;
+}
 
-    // OSC2 values inverted
-    volume2 = 1.0f - hw.adc.GetFloat(3);  // OSC2 volume
-    pitch2 = 1.0f - hw.adc.GetFloat(4);   // OSC2 pitch
-    pulseW2 = 1.0f - hw.adc.GetFloat(5);  // OSC2 pulse width
-    
-    // Key control
-    keyPot = hw.adc.GetFloat(6);
-    int root = static_cast<int>(keyPot * 11.99f);  // 0-11 (C to B)
+// Among ACTIVE voices, pick index whose owner has the smallest hold timestamp (oldest)
+static int FindOldestActiveVoice()
+{
+    int oldest_vi = -1;
+    uint32_t oldest_ts = 0;
+    for(int v = 0; v < kNumVoices; ++v)
+    {
+        if(!voices[v].active) continue;
+        uint32_t ts = GetTs(voices[v].is_midi, voices[v].key_id);
+        if(oldest_vi < 0 || ts < oldest_ts) { oldest_ts = ts; oldest_vi = v; }
+    }
+    return oldest_vi;
+}
 
-    // Configure oscillator frequencies
-    float freq1, freq2;
-    
-    if (quantizeMode == OFF) {
-        freq1 = 50.f + (pitch1 * 1950.f);
-        freq2 = 50.f + (pitch2 * 1950.f);
-    } else {
-        // When scale lock is enabled, both oscillators use OSC1's pitch position
-        // but maintain their relative offsets
-        if (scaleLockEnabled && quantizeMode != CHROMATIC) {
-            // Calculate base pitch position
-            float basePitch = (pitch1 + pitch2) / 2.0f;
-            
-            // Apply OSC1 and OSC2 as offsets from the base
-            freq1 = QuantizePitch(basePitch + (pitch1 - 0.5f) * 0.1f, quantizeMode, root);
-            freq2 = QuantizePitch(basePitch + (pitch2 - 0.5f) * 0.1f, quantizeMode, root);
-        } else {
-            // Standard independent quantization
-            freq1 = QuantizePitch(pitch1, quantizeMode, root);
-            freq2 = QuantizePitch(pitch2, quantizeMode, root);
+// Among HELD but UNASSIGNED keys (buttons and MIDI), return the one with the oldest ts
+static KeyRef FindOldestWaitingKey()
+{
+    KeyRef best; uint32_t oldest_ts = 0;
+    // buttons
+    for(int b = 0; b < kNumKeys; ++b)
+    {
+        if(btn_held[b] && btn_voice[b] < 0)
+        {
+            uint32_t ts = btn_hold_ts[b];
+            if(!best.valid || ts < oldest_ts) { oldest_ts = ts; best = {false, b, true}; }
         }
     }
-    
-    osc1.SetFreq(freq1);
-    osc1.SetAmp(volume1);
-    osc1.SetPw(pulseW1);
-
-    osc2.SetFreq(freq2);
-    osc2.SetAmp(volume2);
-    osc2.SetPw(pulseW2);
-
-    for(size_t i = 0; i < size; i++)
+    // MIDI notes
+    for(int n = 0; n < kNumMidiNotes; ++n)
     {
-        float sig1 = osc1.Process();
-        float sig2 = osc2.Process();
-        out[0][i] = sig1 + sig2;
-        out[1][i] = sig1 + sig2;
+        if(midi_held[n] && midi_voice[n] < 0)
+        {
+            uint32_t ts = midi_hold_ts[n];
+            if(!best.valid || ts < oldest_ts) { oldest_ts = ts; best = {true, n, true}; }
+        }
+    }
+    return best;
+}
+
+static void AssignVoiceToKey(int voice_idx, bool is_midi, int key_id)
+{
+    voices[voice_idx].active = true;
+    voices[voice_idx].is_midi = is_midi;
+    voices[voice_idx].key_id = key_id;
+    SetOwnerVoice(is_midi, key_id, voice_idx);
+}
+
+static void ReleaseVoice(int voice_idx)
+{
+    if(!voices[voice_idx].active) return;
+    const bool is_midi = voices[voice_idx].is_midi;
+    const int  key_id  = voices[voice_idx].key_id;
+    if(key_id >= 0)
+    {
+        if(GetOwnerVoice(is_midi, key_id) == voice_idx)
+            SetOwnerVoice(is_midi, key_id, -1);
+    }
+    voices[voice_idx].active = false;
+    voices[voice_idx].key_id = -1;
+}
+
+static void OnKeyPressed(bool is_midi, int id)
+{
+    // ignore out-of-range MIDI ids
+    if(is_midi && (id < 0 || id >= kNumMidiNotes)) return;
+    SetHeld(is_midi, id, true);
+    SetTs(is_midi, id, ++global_press_counter);
+
+    int free_v = FindFreeVoice();
+    if(free_v >= 0)
+    {
+        AssignVoiceToKey(free_v, is_midi, id);
+        return;
+    }
+
+    // Steal from oldest active
+    int steal_vi = FindOldestActiveVoice();
+    if(steal_vi >= 0)
+    {
+        const bool victim_midi = voices[steal_vi].is_midi;
+        const int  victim_id   = voices[steal_vi].key_id;
+        // victim remains held but unassigned
+        SetOwnerVoice(victim_midi, victim_id, -1);
+        AssignVoiceToKey(steal_vi, is_midi, id);
     }
 }
 
-void UpdateWaveform1()
+static void OnKeyReleased(bool is_midi, int id)
 {
-    currentWaveform1 = (currentWaveform1 + 1) % 3;
-    switch(currentWaveform1)
+    if(is_midi && (id < 0 || id >= kNumMidiNotes)) return;
+    SetHeld(is_midi, id, false);
+
+    int owned_v = GetOwnerVoice(is_midi, id);
+    if(owned_v >= 0)
+        ReleaseVoice(owned_v);
+
+    // Give free voices (if any) to the oldest waiting keys (restitution first)
+    while(true)
     {
-        case 0: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
-        case 1: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
-        case 2: osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+        KeyRef wait = FindOldestWaitingKey();
+        int v = FindFreeVoice();
+        if(!wait.valid || v < 0)
+            break;
+        AssignVoiceToKey(v, wait.is_midi, wait.id);
     }
 }
 
-void UpdateWaveform2()
+// ===== MIDI event handling =====
+static void HandleMidiMessage(MidiEvent m)
 {
-    currentWaveform2 = (currentWaveform2 + 1) % 3;
-    switch(currentWaveform2)
+    if(m.type == NoteOn && m.data[1] > 0)
+        OnKeyPressed(true, m.data[0]);
+    else if(m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0))
+        OnKeyReleased(true, m.data[0]);
+}
+
+// ===== Audio Callback =====
+static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
+{
+    // pots (match contiguous ADC order)
+    volume1 = hw.adc.GetFloat(0);
+    pulseW1 = hw.adc.GetFloat(1);
+    volume2 = hw.adc.GetFloat(2);
+    pulseW2 = hw.adc.GetFloat(3);
+    detune  = hw.adc.GetFloat(4);
+
+    const float cents = (detune - 0.5f) * 100.0f;
+    const float detuneFactor = powf(2.0f, cents / 1200.0f);
+
+    // Scale output based on max polyphony (2 oscs per voice)
+    const float mix_scale = 1.0f / (2.0f * kNumVoices);
+
+    for(int v = 0; v < kNumVoices; ++v)
     {
-        case 0: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
-        case 1: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
-        case 2: osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+        if(voices[v].active)
+        {
+            const float f = KeyFreq(voices[v].is_midi, voices[v].key_id);
+            osc1[v].SetFreq(f);
+            osc1[v].SetAmp(volume1);
+            osc1[v].SetPw(pulseW1);
+
+            osc2[v].SetFreq(f * detuneFactor);
+            osc2[v].SetAmp(volume2);
+            osc2[v].SetPw(pulseW2);
+        }
+        else
+        {
+            // why: hard-zero inactive voices to avoid bleed
+            osc1[v].SetAmp(0.f);
+            osc2[v].SetAmp(0.f);
+        }
+    }
+
+    for(size_t i = 0; i < size; ++i)
+    {
+        float mix = 0.f;
+        for(int v = 0; v < kNumVoices; ++v)
+        {
+            mix += osc1[v].Process();
+            mix += osc2[v].Process();
+        }
+        mix *= mix_scale; // headroom scales with polyphony
+        out[0][i] = mix;
+        out[1][i] = mix;
     }
 }
 
@@ -176,63 +259,67 @@ int main(void)
     hw.Init();
     hw.SetAudioBlockSize(4);
 
-    // Initialize oscillators
-    osc1.Init(hw.AudioSampleRate());
-    osc2.Init(hw.AudioSampleRate());
-    osc1.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
-    osc2.SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
+    // Buttons
+    for(int i = 0; i < kNumKeys; ++i)
+    {
+        keybutton[i].Init(kButtonPins[i], GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+        btn_voice[i]   = -1;
+        btn_hold_ts[i] = 0;
+    }
 
-    // Initialize buttons
-    GPIO button1, button2, buttonQuant, buttonScaleLock;
-    button1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC1 waveform
-    button2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC2 waveform
-    buttonQuant.Init(D12, GPIO::Mode::INPUT, GPIO::Pull::PULLUP); // Quantization mode
-    buttonScaleLock.Init(D11, GPIO::Mode::INPUT, GPIO::Pull::PULLUP); // Scale lock toggle
+    // Initialize MIDI UART (DIN)
+    {
+        MidiUartHandler::Config midi_cfg;
+        midi_cfg.transport_config.periph = UartHandler::Config::Peripheral::USART_1;
+        midi_cfg.transport_config.rx = D30;
+        midi_cfg.transport_config.tx = D29; // not required for input-only
+        midi.Init(midi_cfg);
+    }
 
-    // Configure ADC (added A6 for key control)
-    adcConfig[0].InitSingle(A0);  // OSC1 Volume
-    adcConfig[1].InitSingle(A1);  // OSC1 Pitch
-    adcConfig[2].InitSingle(A2);  // OSC1 PWM
-    adcConfig[3].InitSingle(A3);  // OSC2 Volume
-    adcConfig[4].InitSingle(A4);  // OSC2 Pitch
-    adcConfig[5].InitSingle(A5);  // OSC2 PWM
-    adcConfig[6].InitSingle(A6);  // Key/Root control
-    hw.adc.Init(adcConfig, 7);    // 7 channels now
+    // ADC (contiguous entries only)
+    adc_cfg[0].InitSingle(A0); // OSC1 Volume
+    adc_cfg[1].InitSingle(A1); // OSC1 Pulse Width
+    adc_cfg[2].InitSingle(A3); // OSC2 Volume
+    adc_cfg[3].InitSingle(A4); // OSC2 Pulse Width
+    adc_cfg[4].InitSingle(A5); // OSC2 Detune
+    hw.adc.Init(adc_cfg, kNumAdc);
     hw.adc.Start();
 
+    // Oscillators
+    for(int v = 0; v < kNumVoices; ++v)
+    {
+        osc1[v].Init(hw.AudioSampleRate());
+        osc2[v].Init(hw.AudioSampleRate());
+        osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
+        osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
+        osc1[v].SetAmp(0.f);
+        osc2[v].SetAmp(0.f);
+    }
+
+    // Start audio
     hw.StartAudio(AudioCallback);
 
-    while(1)
+    // Poll buttons + process MIDI
+    bool prev[kNumKeys] = {false};
+
+    while(true)
     {
-        // Handle OSC1 button (D14)
-        bool currentButtonState1 = !button1.Read();
-        if(currentButtonState1 && !lastButtonState1) {
-            UpdateWaveform1();
+        // Buttons
+        for(int b = 0; b < kNumKeys; ++b)
+        {
+            bool pressed = !keybutton[b].Read(); // active-low
+            if(pressed && !prev[b])
+                OnKeyPressed(false, b);
+            else if(!pressed && prev[b])
+                OnKeyReleased(false, b);
+            prev[b] = pressed;
         }
-        lastButtonState1 = currentButtonState1;
-        
-        // Handle OSC2 button (D13)
-        bool currentButtonState2 = !button2.Read();
-        if(currentButtonState2 && !lastButtonState2) {
-            UpdateWaveform2();
-        }
-        lastButtonState2 = currentButtonState2;
-        
-        // Handle quantization mode button (D12)
-        bool currentButtonStateQuant = !buttonQuant.Read();
-        if(currentButtonStateQuant && !lastButtonStateQuant) {
-            // Cycle through quantization modes: OFF → CHROMATIC → MAJOR → MINOR → OFF...
-            quantizeMode = static_cast<QuantMode>((static_cast<int>(quantizeMode) + 1) % 4);
-        }
-        lastButtonStateQuant = currentButtonStateQuant;
-        
-        // Handle scale lock button (D11)
-        bool currentButtonStateScaleLock = !buttonScaleLock.Read();
-        if(currentButtonStateScaleLock && !lastButtonStateScaleLock) {
-            scaleLockEnabled = !scaleLockEnabled;
-        }
-        lastButtonStateScaleLock = currentButtonStateScaleLock;
-        
-        System::Delay(10);
+
+        // MIDI
+        midi.Listen();
+        while(midi.HasEvents())
+            HandleMidiMessage(midi.PopEvent());
+
+        System::Delay(1);
     }
 }
