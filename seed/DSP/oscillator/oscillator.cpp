@@ -1,15 +1,15 @@
-// Purpose: Two-voice, two-osc-per-voice synth driven ONLY by hardware buttons.
+// File: src/button_synth_two_voices.cpp
+// Purpose: Two-voice, two-osc-per-voice synth driven by hardware buttons **and** external MIDI over DIN.
 // Behavior:
-//  - Up to 2 simultaneous button notes => up to 2 voices (each voice uses 2 oscillators).
-//  - On third (or more) press while 2 voices active: steal the OLDEST held button's voice
-//    and give it to the newest press.
-//  - If the stolen button is still held when the newer button releases, the voice
-//    is returned to the stolen (oldest) button. (Fair restitution.)
-// Why: Implements deterministic voice allocation with proper restitution; fixes ADC
-//      config count, removes MIDI, and avoids reassign-while-scanning races.
+//  - Up to 2 simultaneous notes total (buttons + MIDI combined) => 2 voices, each with 2 oscillators.
+//  - On 3rd (or more) press while 2 voices active: steal the OLDEST held note (fair voice stealing).
+//  - If a stolen note remains held and the stealing note releases, the voice is returned to the stolen note (restitution).
+//  - Buttons map to fixed notes; MIDI uses incoming note numbers.
+// Why: Unified allocator across buttons & MIDI, minimal races, fixed ADC config, edge-driven logic.
 
 #include "daisysp.h"
 #include "daisy_seed.h"
+#include "hid/midi.h"
 
 using namespace daisy;
 using namespace daisysp;
@@ -18,13 +18,14 @@ using namespace seed;
 // ===== Hardware =====
 DaisySeed hw;
 static constexpr int kNumVoices = 2;
-static constexpr int kNumKeys   = 6;               // 6 hardware buttons
+static constexpr int kNumKeys   = 6;               // hardware buttons
 static const Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
 GPIO keybutton[kNumKeys];
 
-// ===== ADC knobs (5 used here) =====
-// 0: OSC1 Volume, 1: OSC1 Pulse Width, 2: (unused), 3: OSC2 Volume, 4: OSC2 Pulse Width, 5: OSC2 Detune
-AdcChannelConfig adc_cfg[6];
+// ===== ADC knobs (5 contiguous entries) =====
+// order: A0(OSC1 Vol), A1(OSC1 PW), A3(OSC2 Vol), A4(OSC2 PW), A5(OSC2 Detune)
+static constexpr int kNumAdc = 5;
+AdcChannelConfig adc_cfg[kNumAdc];
 
 // ===== Params read each audio block =====
 float volume1 = 0.f, volume2 = 0.f;
@@ -35,30 +36,49 @@ float detune  = 0.5f; // 0..1 => -50..+50 cents
 Oscillator osc1[kNumVoices];
 Oscillator osc2[kNumVoices];
 
-// Map 6 local buttons to MIDI notes then to Hz
-static inline float KeyNoteFreq(int btn_id)
+// ===== MIDI =====
+MidiUartHandler midi;
+
+// Buttons -> fixed MIDI notes
+static inline float ButtonNoteFreq(int btn_id)
 {
-    static const float kMidiNotes[kNumKeys] = {60, 62, 64, 65, 67, 69}; // C4 D4 E4 F4 G4 A4
+    static const uint8_t kMidiNotes[kNumKeys] = {60, 62, 64, 65, 67, 69}; // C4 D4 E4 F4 G4 A4
     return mtof(kMidiNotes[btn_id]);
 }
 
 // ===== Voice/Allocation State =====
 struct Voice {
     bool     active = false;
-    int      btn_id = -1;       // which button owns this voice
-    uint32_t timestamp = 0;     // when assigned (press order)
+    bool     is_midi = false; // owner type
+    int      key_id = -1;     // button index 0..5 or MIDI note 0..127
 };
 
 Voice voices[kNumVoices];
 
 // Per-button state
-bool     btn_held[kNumKeys] = {false};
-int      btn_voice[kNumKeys];     // -1 if none, else voice index
-uint32_t btn_hold_ts[kNumKeys];   // press order counter
+bool     btn_held[kNumKeys]   = {false};
+int      btn_voice[kNumKeys];              // -1 if none, else voice index
+uint32_t btn_hold_ts[kNumKeys];            // press order
 
-uint32_t global_press_counter = 0; // increases on each **new** press edge
+// Per-MIDI-note state
+static constexpr int kNumMidiNotes = 128;
+bool     midi_held[kNumMidiNotes] = {false};
+int      midi_voice[kNumMidiNotes];        // -1 if none
+uint32_t midi_hold_ts[kNumMidiNotes];
 
-// Utility: find free voice index or -1
+uint32_t global_press_counter = 0; // monotonic; used for order only
+
+// ---- Small helpers (keep logic readable) ----
+static inline bool   GetHeld(bool is_midi, int id)               { return is_midi ? midi_held[id]      : btn_held[id]; }
+static inline void   SetHeld(bool is_midi, int id, bool v)       { if(is_midi) midi_held[id]=v; else btn_held[id]=v; }
+static inline int    GetOwnerVoice(bool is_midi, int id)         { return is_midi ? midi_voice[id]     : btn_voice[id]; }
+static inline void   SetOwnerVoice(bool is_midi, int id, int vi) { if(is_midi) midi_voice[id]=vi; else btn_voice[id]=vi; }
+static inline uint32_t GetTs(bool is_midi, int id)               { return is_midi ? midi_hold_ts[id]   : btn_hold_ts[id]; }
+static inline void     SetTs(bool is_midi, int id, uint32_t ts)  { if(is_midi) midi_hold_ts[id]=ts; else btn_hold_ts[id]=ts; }
+static inline float  KeyFreq(bool is_midi, int id)               { return is_midi ? mtof((float)id) : ButtonNoteFreq(id); }
+
+struct KeyRef { bool is_midi=false; int id=-1; bool valid=false; };
+
 static int FindFreeVoice()
 {
     for(int v = 0; v < kNumVoices; ++v)
@@ -66,134 +86,143 @@ static int FindFreeVoice()
     return -1;
 }
 
-// Utility: among ACTIVE voices, return index whose owning button has the OLDEST hold timestamp
+// Among ACTIVE voices, pick index whose owner has the smallest hold timestamp (oldest)
 static int FindOldestActiveVoice()
 {
     int oldest_vi = -1;
     uint32_t oldest_ts = 0;
     for(int v = 0; v < kNumVoices; ++v)
     {
-        if(voices[v].active)
-        {
-            uint32_t ts = btn_hold_ts[voices[v].btn_id];
-            if(oldest_vi < 0 || ts < oldest_ts)
-            {
-                oldest_ts = ts;
-                oldest_vi = v;
-            }
-        }
+        if(!voices[v].active) continue;
+        uint32_t ts = GetTs(voices[v].is_midi, voices[v].key_id);
+        if(oldest_vi < 0 || ts < oldest_ts) { oldest_ts = ts; oldest_vi = v; }
     }
     return oldest_vi;
 }
 
-// Utility: among HELD buttons that are currently UNASSIGNED, return the one with OLDEST hold ts; else -1
-static int FindOldestWaitingButton()
+// Among HELD but UNASSIGNED keys (buttons and MIDI), return the one with the oldest ts
+static KeyRef FindOldestWaitingKey()
 {
-    int res = -1; uint32_t oldest_ts = 0;
+    KeyRef best; uint32_t oldest_ts = 0;
+    // buttons
     for(int b = 0; b < kNumKeys; ++b)
     {
         if(btn_held[b] && btn_voice[b] < 0)
         {
-            if(res < 0 || btn_hold_ts[b] < oldest_ts)
-            {
-                oldest_ts = btn_hold_ts[b];
-                res = b;
-            }
+            uint32_t ts = btn_hold_ts[b];
+            if(!best.valid || ts < oldest_ts) { oldest_ts = ts; best = {false, b, true}; }
         }
     }
-    return res;
+    // MIDI notes
+    for(int n = 0; n < kNumMidiNotes; ++n)
+    {
+        if(midi_held[n] && midi_voice[n] < 0)
+        {
+            uint32_t ts = midi_hold_ts[n];
+            if(!best.valid || ts < oldest_ts) { oldest_ts = ts; best = {true, n, true}; }
+        }
+    }
+    return best;
 }
 
-static void AssignVoiceToButton(int voice_idx, int btn_idx)
+static void AssignVoiceToKey(int voice_idx, bool is_midi, int key_id)
 {
-    voices[voice_idx].active    = true;
-    voices[voice_idx].btn_id    = btn_idx;
-    voices[voice_idx].timestamp = ++global_press_counter; // used only for debugging/telemetry
-    btn_voice[btn_idx]          = voice_idx;
+    voices[voice_idx].active = true;
+    voices[voice_idx].is_midi = is_midi;
+    voices[voice_idx].key_id = key_id;
+    SetOwnerVoice(is_midi, key_id, voice_idx);
 }
 
 static void ReleaseVoice(int voice_idx)
 {
-    if(voices[voice_idx].active)
+    if(!voices[voice_idx].active) return;
+    const bool is_midi = voices[voice_idx].is_midi;
+    const int  key_id  = voices[voice_idx].key_id;
+    if(key_id >= 0)
     {
-        int b = voices[voice_idx].btn_id;
-        if(b >= 0 && b < kNumKeys && btn_voice[b] == voice_idx)
-            btn_voice[b] = -1;
-        voices[voice_idx].active = false;
-        voices[voice_idx].btn_id = -1;
+        if(GetOwnerVoice(is_midi, key_id) == voice_idx)
+            SetOwnerVoice(is_midi, key_id, -1);
     }
+    voices[voice_idx].active = false;
+    voices[voice_idx].key_id = -1;
 }
 
-// Called on **press edge** of a button
-static void OnButtonPressed(int b)
+static void OnKeyPressed(bool is_midi, int id)
 {
-    btn_held[b] = true;
-    btn_hold_ts[b] = ++global_press_counter; // preserve oldest-first policy
+    // ignore out-of-range MIDI ids
+    if(is_midi && (id < 0 || id >= kNumMidiNotes)) return;
+    SetHeld(is_midi, id, true);
+    SetTs(is_midi, id, ++global_press_counter);
 
     int free_v = FindFreeVoice();
     if(free_v >= 0)
     {
-        AssignVoiceToButton(free_v, b);
+        AssignVoiceToKey(free_v, is_midi, id);
         return;
     }
 
-    // No free voice: steal from OLDEST active button
+    // Steal from oldest active
     int steal_vi = FindOldestActiveVoice();
     if(steal_vi >= 0)
     {
-        int victim_btn = voices[steal_vi].btn_id;
-        // Mark victim as waiting (still held, no voice now)
-        if(victim_btn >= 0)
-            btn_voice[victim_btn] = -1;
-        // Give voice to the newly pressed button
-        AssignVoiceToButton(steal_vi, b);
+        const bool victim_midi = voices[steal_vi].is_midi;
+        const int  victim_id   = voices[steal_vi].key_id;
+        // victim remains held but unassigned
+        SetOwnerVoice(victim_midi, victim_id, -1);
+        AssignVoiceToKey(steal_vi, is_midi, id);
     }
 }
 
-// Called on **release edge** of a button
-static void OnButtonReleased(int b)
+static void OnKeyReleased(bool is_midi, int id)
 {
-    btn_held[b] = false;
+    if(is_midi && (id < 0 || id >= kNumMidiNotes)) return;
+    SetHeld(is_midi, id, false);
 
-    // If this button owned a voice, free it first
-    int owned_v = btn_voice[b];
+    int owned_v = GetOwnerVoice(is_midi, id);
     if(owned_v >= 0)
         ReleaseVoice(owned_v);
 
-    // After freeing, if any *waiting* (held but unassigned) buttons exist, 
-    // return the voice to the OLDEST waiting one (this ensures restitution to stolen owner).
+    // Give free voices (if any) to the oldest waiting keys (restitution first)
     while(true)
     {
-        int waiting_btn = FindOldestWaitingButton();
-        if(waiting_btn < 0) break; // none waiting
+        KeyRef wait = FindOldestWaitingKey();
         int v = FindFreeVoice();
-        if(v < 0) break;            // should not happen, but be safe
-        AssignVoiceToButton(v, waiting_btn);
-        // assign only one per release; others will pick up on later releases
-        break;
+        if(!wait.valid || v < 0)
+            break;
+        AssignVoiceToKey(v, wait.is_midi, wait.id);
     }
+}
+
+// ===== MIDI event handling =====
+static void HandleMidiMessage(MidiEvent m)
+{
+    if(m.type == NoteOn && m.data[1] > 0)
+        OnKeyPressed(true, m.data[0]);
+    else if(m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0))
+        OnKeyReleased(true, m.data[0]);
 }
 
 // ===== Audio Callback =====
 static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
-    // pots
+    // pots (match contiguous ADC order)
     volume1 = hw.adc.GetFloat(0);
     pulseW1 = hw.adc.GetFloat(1);
-    volume2 = hw.adc.GetFloat(3);
-    pulseW2 = hw.adc.GetFloat(4);
-    detune  = hw.adc.GetFloat(5);
+    volume2 = hw.adc.GetFloat(2);
+    pulseW2 = hw.adc.GetFloat(3);
+    detune  = hw.adc.GetFloat(4);
 
-    // detune: -50..+50 cents
     const float cents = (detune - 0.5f) * 100.0f;
     const float detuneFactor = powf(2.0f, cents / 1200.0f);
 
-    // configure per active voice
+    // Scale output based on max polyphony (2 oscs per voice)
+    const float mix_scale = 1.0f / (2.0f * kNumVoices);
+
     for(int v = 0; v < kNumVoices; ++v)
     {
         if(voices[v].active)
         {
-            const float f = KeyNoteFreq(voices[v].btn_id);
+            const float f = KeyFreq(voices[v].is_midi, voices[v].key_id);
             osc1[v].SetFreq(f);
             osc1[v].SetAmp(volume1);
             osc1[v].SetPw(pulseW1);
@@ -218,8 +247,7 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
             mix += osc1[v].Process();
             mix += osc2[v].Process();
         }
-        // simple headroom
-        mix *= 0.5f;
+        mix *= mix_scale; // headroom scales with polyphony
         out[0][i] = mix;
         out[1][i] = mix;
     }
@@ -232,7 +260,6 @@ int main(void)
     hw.SetAudioBlockSize(4);
 
     // Buttons
-    //daisy::Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
     for(int i = 0; i < kNumKeys; ++i)
     {
         keybutton[i].Init(kButtonPins[i], GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
@@ -240,14 +267,22 @@ int main(void)
         btn_hold_ts[i] = 0;
     }
 
-    // ADC: **configure ONLY the channels we actually read** and pass the correct count
+    // Initialize MIDI UART (DIN)
+    {
+        MidiUartHandler::Config midi_cfg;
+        midi_cfg.transport_config.periph = UartHandler::Config::Peripheral::USART_1;
+        midi_cfg.transport_config.rx = D30;
+        midi_cfg.transport_config.tx = D29; // not required for input-only
+        midi.Init(midi_cfg);
+    }
+
+    // ADC (contiguous entries only)
     adc_cfg[0].InitSingle(A0); // OSC1 Volume
     adc_cfg[1].InitSingle(A1); // OSC1 Pulse Width
-    // adc_cfg[2] intentionally unused
-    adc_cfg[3].InitSingle(A3); // OSC2 Volume
-    adc_cfg[4].InitSingle(A4); // OSC2 Pulse Width
-    adc_cfg[5].InitSingle(A5); // OSC2 Detune
-    hw.adc.Init(adc_cfg, 6);   // IMPORTANT: pass the real length of adc_cfg array
+    adc_cfg[2].InitSingle(A3); // OSC2 Volume
+    adc_cfg[3].InitSingle(A4); // OSC2 Pulse Width
+    adc_cfg[4].InitSingle(A5); // OSC2 Detune
+    hw.adc.Init(adc_cfg, kNumAdc);
     hw.adc.Start();
 
     // Oscillators
@@ -264,21 +299,27 @@ int main(void)
     // Start audio
     hw.StartAudio(AudioCallback);
 
-    // Poll buttons (simple edge detect); add hardware debouncing if needed
+    // Poll buttons + process MIDI
     bool prev[kNumKeys] = {false};
 
     while(true)
     {
+        // Buttons
         for(int b = 0; b < kNumKeys; ++b)
         {
-            bool pressed = !keybutton[b].Read(); // active low with PULLUP
+            bool pressed = !keybutton[b].Read(); // active-low
             if(pressed && !prev[b])
-                OnButtonPressed(b);
+                OnKeyPressed(false, b);
             else if(!pressed && prev[b])
-                OnButtonReleased(b);
+                OnKeyReleased(false, b);
             prev[b] = pressed;
         }
 
-        System::Delay(1); // short poll
+        // MIDI
+        midi.Listen();
+        while(midi.HasEvents())
+            HandleMidiMessage(midi.PopEvent());
+
+        System::Delay(1);
     }
 }
