@@ -21,6 +21,7 @@ static constexpr int kNumVoices = 2;
 static constexpr int kNumKeys   = 6;               // hardware buttons
 static const Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
 GPIO keybutton[kNumKeys];
+int currentWaveform1 = 0, currentWaveform2 = 0; // Current waveform for each oscillator
 
 // ===== ADC knobs (5 contiguous entries) =====
 // order: A0(OSC1 Vol), A1(OSC1 PW), A3(OSC2 Vol), A4(OSC2 PW), A5(OSC2 Detune)
@@ -259,13 +260,14 @@ int main(void)
     hw.Init();
     hw.SetAudioBlockSize(4);
 
-    // Buttons
+    /*// Buttons
     for(int i = 0; i < kNumKeys; ++i)
     {
         keybutton[i].Init(kButtonPins[i], GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
         btn_voice[i]   = -1;
         btn_hold_ts[i] = 0;
     }
+    */
 
     // Initialize MIDI UART (DIN)
     {
@@ -304,6 +306,7 @@ int main(void)
 
     while(true)
     {
+    /*    
         // Buttons
         for(int b = 0; b < kNumKeys; ++b)
         {
@@ -314,6 +317,7 @@ int main(void)
                 OnKeyReleased(false, b);
             prev[b] = pressed;
         }
+   */
 
         // MIDI
         midi.Listen();
