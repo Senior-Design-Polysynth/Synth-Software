@@ -19,19 +19,21 @@ using namespace seed;
 DaisySeed hw;
 static constexpr int kNumVoices = 2;
 static constexpr int kNumKeys   = 6;               // hardware buttons
-static const Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
-GPIO keybutton[kNumKeys];
+//static const Pin kButtonPins[kNumKeys] = {D9, D10, D11, D12, D13, D14};
+//GPIO keybutton[kNumKeys];
 int currentWaveform1 = 0, currentWaveform2 = 0; // Current waveform for each oscillator
+bool lastButtonState1 = false, lastButtonState2 = false;
 
 // ===== ADC knobs (5 contiguous entries) =====
 // order: A0(OSC1 Vol), A1(OSC1 PW), A3(OSC2 Vol), A4(OSC2 PW), A5(OSC2 Detune)
-static constexpr int kNumAdc = 5;
+static constexpr int kNumAdc = 6;
 AdcChannelConfig adc_cfg[kNumAdc];
 
 // ===== Params read each audio block =====
 float volume1 = 0.f, volume2 = 0.f;
 float pulseW1 = 0.5f, pulseW2 = 0.5f;
-float detune  = 0.5f; // 0..1 => -50..+50 cents
+float detune1  = 0.5f; // 0..1 => -200..+200 cents
+float detune2  = 0.5f; // 0..1 => -200..+200 cents
 
 // ===== Synthesis =====
 Oscillator osc1[kNumVoices];
@@ -207,14 +209,18 @@ static void HandleMidiMessage(MidiEvent m)
 static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
     // pots (match contiguous ADC order)
-    volume1 = hw.adc.GetFloat(0);
-    pulseW1 = hw.adc.GetFloat(1);
-    volume2 = hw.adc.GetFloat(2);
-    pulseW2 = hw.adc.GetFloat(3);
-    detune  = hw.adc.GetFloat(4);
+    volume1  = hw.adc.GetFloat(0);
+    pulseW1  = hw.adc.GetFloat(1);
+    detune1  = hw.adc.GetFloat(2);
+    volume2  = hw.adc.GetFloat(3);
+    pulseW2  = hw.adc.GetFloat(4);
+    detune2  = hw.adc.GetFloat(5);
 
-    const float cents = (detune - 0.5f) * 100.0f;
-    const float detuneFactor = powf(2.0f, cents / 1200.0f);
+    const float cents1 = (detune1 - 0.5f) * 400.0f;
+    const float detuneFactor1 = powf(2.0f, cents1 / 1200.0f);
+
+    const float cents2 = (detune2 - 0.5f) * 400.0f;
+    const float detuneFactor2 = powf(2.0f, cents2 / 1200.0f);
 
     // Scale output based on max polyphony (2 oscs per voice)
     const float mix_scale = 1.0f / (2.0f * kNumVoices);
@@ -224,11 +230,11 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
         if(voices[v].active)
         {
             const float f = KeyFreq(voices[v].is_midi, voices[v].key_id);
-            osc1[v].SetFreq(f);
+            osc1[v].SetFreq(f * detuneFactor1);
             osc1[v].SetAmp(volume1);
             osc1[v].SetPw(pulseW1);
 
-            osc2[v].SetFreq(f * detuneFactor);
+            osc2[v].SetFreq(f * detuneFactor2);
             osc2[v].SetAmp(volume2);
             osc2[v].SetPw(pulseW2);
         }
@@ -254,6 +260,35 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
     }
 }
 
+//======== Waveform change functions ========
+void UpdateWaveform1()
+{
+    currentWaveform1 = (currentWaveform1 + 1) % 3;
+    for(int v = 0; v < kNumVoices; ++v)
+    {
+        switch(currentWaveform1)
+        {
+            case 0: osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
+            case 1: osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
+            case 2: osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+        }
+    }
+}
+
+void UpdateWaveform2()
+{
+    currentWaveform2 = (currentWaveform2 + 1) % 3;
+    for(int v = 0; v < kNumVoices; ++v)
+    {
+        switch(currentWaveform2)
+        {
+            case 0: osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE); break;
+            case 1: osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW); break;
+            case 2: osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); break;
+        }
+    }
+}
+
 int main(void)
 {
     hw.Configure();
@@ -268,6 +303,9 @@ int main(void)
         btn_hold_ts[i] = 0;
     }
     */
+    GPIO button1, button2;
+    button1.Init(D14, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC1 waveform
+    button2.Init(D13, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);  // OSC2 waveform
 
     // Initialize MIDI UART (DIN)
     {
@@ -281,9 +319,10 @@ int main(void)
     // ADC (contiguous entries only)
     adc_cfg[0].InitSingle(A0); // OSC1 Volume
     adc_cfg[1].InitSingle(A1); // OSC1 Pulse Width
-    adc_cfg[2].InitSingle(A3); // OSC2 Volume
-    adc_cfg[3].InitSingle(A4); // OSC2 Pulse Width
-    adc_cfg[4].InitSingle(A5); // OSC2 Detune
+    adc_cfg[2].InitSingle(A2); // OSC1 Detune
+    adc_cfg[3].InitSingle(A3); // OSC2 Volume
+    adc_cfg[4].InitSingle(A4); // OSC2 Pulse Width
+    adc_cfg[5].InitSingle(A5); // OSC2 Detune
     hw.adc.Init(adc_cfg, kNumAdc);
     hw.adc.Start();
 
@@ -292,8 +331,8 @@ int main(void)
     {
         osc1[v].Init(hw.AudioSampleRate());
         osc2[v].Init(hw.AudioSampleRate());
-        osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
-        osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
+        osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
+        osc2[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
         osc1[v].SetAmp(0.f);
         osc2[v].SetAmp(0.f);
     }
@@ -318,6 +357,19 @@ int main(void)
             prev[b] = pressed;
         }
    */
+        // Handle OSC1 button (D14)
+        bool currentButtonState1 = !button1.Read();
+        if(currentButtonState1 && !lastButtonState1) {
+            UpdateWaveform1();
+        }
+        lastButtonState1 = currentButtonState1;
+        
+        // Handle OSC2 button (D13)
+        bool currentButtonState2 = !button2.Read();
+        if(currentButtonState2 && !lastButtonState2) {
+            UpdateWaveform2();
+        }
+        lastButtonState2 = currentButtonState2;
 
         // MIDI
         midi.Listen();
