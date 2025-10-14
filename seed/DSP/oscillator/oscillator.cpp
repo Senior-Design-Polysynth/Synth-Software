@@ -4,6 +4,7 @@
 // - Restitution: if a stolen note is still held and the stealing note releases, the voice is reassigned to the oldest waiting held note.
 // - Outputs to BOTH internal codec (SAI1: out[0], out[1]) **and** external PCM3060 on SAI2 (out[2], out[3]).
 // - Two hardware buttons (D14, D13) are kept ONLY for changing waveforms of osc1/osc2 (not for playing notes).
+// - FIXED: Corrected ADG706 enable pin to active-HIGH
 
 #include "daisysp.h"
 #include "daisy_seed.h"
@@ -24,7 +25,8 @@ bool lastButtonState1 = false, lastButtonState2 = false;
 static constexpr Pin kMux1Adc = A0;
 static constexpr Pin kMux2Adc = A1;
 
-static constexpr bool kAdg706EnActiveLow = true; // ADG706 EN is active-low on most designs
+// FIXED: ADG706 EN is active-HIGH (per datasheet truth table)
+static constexpr bool kAdg706EnActiveHigh = true;
 static constexpr int kMuxSettleUs = 50; // microseconds to wait after channel change
 
 // ===== ADC via two ADG706 (2 × 16:1). libDaisy mux helper (3 selects) won't work; we scan manually.
@@ -36,14 +38,14 @@ namespace mux_pins {
     static constexpr Pin kMux1S1  = D2;
     static constexpr Pin kMux1S2  = D3;
     static constexpr Pin kMux1S3  = D4;   // MSB
-    static constexpr Pin kMux1EN  = D5;   // EN, active-low
+    static constexpr Pin kMux1EN  = D5;   // EN, active-HIGH
     // MUX2 -> ADC A1
     
     static constexpr Pin kMux2S0  = D17;
     static constexpr Pin kMux2S1  = D18;
     static constexpr Pin kMux2S2  = D19;
     static constexpr Pin kMux2S3  = D20;
-    static constexpr Pin kMux2EN  = D21;  // EN, active-low
+    static constexpr Pin kMux2EN  = D21;  // EN, active-HIGH
 }
 
 static constexpr int kNumAdc = 2; // two ADC inputs (A0, A1)
@@ -57,7 +59,8 @@ static float mux2_vals[16] = {0.f};
 
 static inline void SetMuxEnabled(GPIO& en, bool enable)
 {
-    const bool en_level = kAdg706EnActiveLow ? 0 : 1;
+    // For active-HIGH enable: write HIGH to enable, LOW to disable
+    const bool en_level = kAdg706EnActiveHigh ? 1 : 0;
     const bool dis_level = !en_level;
     en.Write(enable ? en_level : dis_level);
 }
@@ -344,6 +347,8 @@ int main(void)
     mux2_s[1].Init(mux_pins::kMux2S1, GPIO::Mode::OUTPUT);
     mux2_s[2].Init(mux_pins::kMux2S2, GPIO::Mode::OUTPUT);
     mux2_s[3].Init(mux_pins::kMux2S3, GPIO::Mode::OUTPUT);
+    
+    // FIXED: Now correctly enables the mux by pulling EN HIGH (active-HIGH logic)
     SetMuxEnabled(mux1_en, true);
     SetMuxEnabled(mux2_en, true);
 
@@ -424,4 +429,3 @@ int main(void)
         System::Delay(1);
     }
 }
-
