@@ -27,7 +27,7 @@ static constexpr Pin kMux2Adc = A1;
 
 // FIXED: ADG706 EN is active-HIGH (per datasheet truth table)
 static constexpr bool kAdg706EnActiveHigh = true;
-static constexpr int kMuxSettleUs = 50; // microseconds to wait after channel change
+static constexpr int kMuxSettleUs = 150; // microseconds to wait after channel change
 
 // ===== ADC via two ADG706 (2 × 16:1). libDaisy mux helper (3 selects) won't work; we scan manually.
 // Two ADG706 feed A0 and A1. We drive 4 select lines per mux and cache 16 channels each.
@@ -41,11 +41,11 @@ namespace mux_pins {
     static constexpr Pin kMux1EN  = D5;   // EN, active-HIGH
     // MUX2 -> ADC A1
     
-    static constexpr Pin kMux2S0  = D17;
-    static constexpr Pin kMux2S1  = D18;
-    static constexpr Pin kMux2S2  = D19;
-    static constexpr Pin kMux2S3  = D20;
-    static constexpr Pin kMux2EN  = D21;  // EN, active-HIGH
+    static constexpr Pin kMux2S0  = D7;
+    static constexpr Pin kMux2S1  = D8;
+    static constexpr Pin kMux2S2  = D9;
+    static constexpr Pin kMux2S3  = D10;
+    static constexpr Pin kMux2EN  = D11;  // EN, active-HIGH
 }
 
 static constexpr int kNumAdc = 2; // two ADC inputs (A0, A1)
@@ -227,9 +227,9 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
     volume1 = mux1_vals[0];
     pulseW1 = mux1_vals[1];
     detune1 = mux1_vals[2];
-    volume2 = mux1_vals[3];
-    pulseW2 = mux1_vals[4];
-    detune2 = mux1_vals[5];
+    volume2 = mux2_vals[0];
+    pulseW2 = mux2_vals[1];
+    detune2 = mux2_vals[2];
 
     const float cents1 = (detune1 - 0.5f) * 400.0f;
     const float cents2 = (detune2 - 0.5f) * 400.0f;
@@ -237,8 +237,10 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
     const float detuneFactor2 = powf(2.0f, cents2 / 1200.0f);
 
     // Normalize by ACTIVE voices (2 oscs per voice)
-    const int active_v = ActiveVoiceCount();
-    const float mix_scale = active_v > 0 ? 1.0f / (2.0f * active_v) : 0.0f;
+    //const int active_v = ActiveVoiceCount();
+    //const float mix_scale = active_v > 0 ? 1.0f / (2.0f * active_v) : 0.0f;
+    //const float mix_scale = active_v > 0 ? 1.0f  : 0.0f;
+    const float mix_scale = 1.f / (2.f * kNumVoices);
 
     // Per-voice parameter update
     for(int v=0; v<kNumVoices; ++v)
