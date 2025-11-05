@@ -19,7 +19,6 @@ DaisySeed hw;
 static constexpr int kNumVoices = 4; // change freely (multiple of 1)
 
 UartHandler uart;
-Led debug_led;
 
 
 // ------------------- Constants for framing -------------------
@@ -424,8 +423,8 @@ void InitUart()
     cfg.periph = UartHandler::Config::Peripheral::UART_4;
     cfg.mode   = UartHandler::Config::Mode::RX; // RX only
     cfg.baudrate = 115200;
-    cfg.pin_config.rx = {DSY_GPIOB, 12};  // D11
-    cfg.pin_config.tx = {DSY_GPIOB, 13};  // D12 (not used)
+    cfg.pin_config.rx = {DSY_GPIOB, 8};  // D11
+    cfg.pin_config.tx = {DSY_GPIOB, 9};  // D12 (not used)
 
     uart.Init(cfg);
 
@@ -436,6 +435,7 @@ int main(void)
 {
     hw.Configure();
     hw.Init();
+
 
     hw.SetAudioBlockSize(48); // 1ms @ 48kHz; multiple of 4
 
@@ -486,7 +486,6 @@ int main(void)
 
     //======UART Initialization=================
     InitUart();      // configure UART1 (for control data)
-    hw.StartLog(true); // enable USB serial logging for debug (optional)
 
     // ==========Dual-SAI (internal + external)==========
     AudioHandle::Config audio_cfg;
