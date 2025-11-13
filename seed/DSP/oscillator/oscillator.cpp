@@ -579,8 +579,14 @@ int main(void)
         osc2[v].SetAmp(0.f);
     }
 
-    // Clear MIDI note ownership maps
-    for(int n=0; n<kNumMidiNotes; ++n) { midi_voice[n] = -1; midi_hold_ts[n] = 0; }
+    // Clear MIDI note ownership/state and force gates LOW
+    for(int n = 0; n < kNumMidiNotes; ++n)
+    {
+        midi_voice[n]   = -1;
+        midi_hold_ts[n] = 0;
+        midi_held[n]    = false;
+    }
+    UpdateGates();  // ensures D1–D4 start at 0 V until keys are pressed
 
     // ===== SAI2 (external PCM3060) config =====
     SaiHandle         sai2;
