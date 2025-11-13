@@ -31,6 +31,8 @@ uint8_t rxBuf[MAX_FRAME];   // stores the bytes of one complete frame
 int     rxIndex = 0;        // how many bytes have been collected so far
 int     expectedLen = 0;    // total number of bytes expected in this frame (from 'len' byte)
 int     state = 0;          // current parser state (0 = wait for 0xAA, 1 = wait for 0x55, 2 = length, 3 = collecting)
+static uint16_t g_ctrl_buf[11];
+static uint8_t  g_ctrl_parts = 0; // bit0..bit3
 
 // ===== Params read each audio block =====
 float volume1 = 0.f, volume2 = 0.f;
@@ -61,7 +63,15 @@ uint32_t midi_hold_ts[kNumMidiNotes];      // press order
 
 uint32_t global_press_counter = 0; // monotonic press counter
 
-static inline int  ActiveVoiceCount() { int c=0; for(int v=0; v<kNumVoices; ++v) c += voices[v].active?1:0; return c; }
+static inline int  ActiveVoiceCount() 
+{ 
+    int c=0; 
+    for(int v=0; v<kNumVoices; ++v) 
+    {
+        c += voices[v].active?1:0;
+    }
+    return c; 
+}
 
 static inline int FindFreeVoice()
 {
@@ -199,7 +209,7 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
         }
     }
 
-   for(size_t i = 0; i < size; ++i)
+    for(size_t i = 0; i < size; ++i)
     {
         float mix[kNumVoices];
 
@@ -214,8 +224,8 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
         out[1][i] = mix[1]; // Internal Right
 
         // Channels 2 and 3 are for the EXTERNAL PCM3060
-        out[2][i] = mix[2]; // External Left
-        out[3][i] = mix[3]; // External Right
+        out[2][i] = mix[3]; // External Left
+        out[3][i] = mix[2]; // External Right
     }
 }
 
@@ -312,47 +322,101 @@ void ApplyParameters(uint16_t* vals, int n)
     }
 }
 
+// helper: when we have all 4 parts, apply
+static void TryApplyAll()
+{
+    if(g_ctrl_parts == 0x0F) // 0000 1111
+    {
+        ApplyParameters(g_ctrl_buf, 11);
+        g_ctrl_parts = 0; // clear for next round
+    }
+}
+
 // ------------------- Full frame processor ----------------------
 // ===============================================================
 
 // Called when an entire frame has been received and verified
 void ProcessFrame(uint8_t* data, int n)
 {
-    // Sanity check: must at least fit header + sequence + one parameter
-    if(n < 7)
+    // data[0..n-1] is: len, type, seq(4), params..., crc was already checked in parser
+    if(n < 1 + 1 + 4 + 1) // minimal sanity
         return;
 
-    // Compute and verify CRC
-    uint8_t crc_recv = data[n - 1];          // last byte of frame = received CRC
-    uint8_t crc_calc = crc8(data, n - 1);    // recalc CRC for comparison
-    if(crc_recv != crc_calc)
-        return; // CRC mismatch → discard frame
+    int p = 0;
+    uint8_t len  = data[p++]; // payload len
+    uint8_t type = data[p++]; // 0x01..0x04
+    (void)len;
 
-    int p = 0;                 // parsing pointer index
-    uint8_t len  = data[p++];  // payload length byte
-    uint8_t type = data[p++];  // frame type (0x01 for control)
-
-    // Read 4-byte sequence number (little-endian)
+    // read seq (we don't really need it)
     uint32_t seq = data[p]
                  | (data[p+1] << 8)
                  | (data[p+2] << 16)
                  | (data[p+3] << 24);
     p += 4;
-    (void)seq;  // currently unused, but can be logged/debugged later
+    (void)seq;
 
-    // Extract 11 × 16-bit parameter values from the data section
-    const int nParams = 11;
-    uint16_t params[nParams];
-    for(int i = 0; i < nParams; i++)
+    // how many 16-bit params are in this frame?
+    // len = 1(type) + 4(seq) + 2*N
+    int param_bytes = len - (1 + 4);
+    int nparams = param_bytes / 2;
+    if(nparams <= 0)
+        return;
+
+    // drop into the right place based on 'type'
+    switch(type)
     {
-        // combine two bytes into one 16-bit value (little-endian)
-        params[i] = data[p] | (data[p + 1] << 8);
-        p += 2;
+        case 0x01: // params 0,1,2
+        {
+            for(int i = 0; i < nparams && i < 3; i++)
+            {
+                g_ctrl_buf[0 + i] = data[p] | (data[p+1] << 8);
+                p += 2;
+            }
+            g_ctrl_parts |= 0x01;
+        }
+        break;
+
+        case 0x02: // params 3,4,5
+        {
+            for(int i = 0; i < nparams && i < 3; i++)
+            {
+                g_ctrl_buf[3 + i] = data[p] | (data[p+1] << 8);
+                p += 2;
+            }
+            g_ctrl_parts |= 0x02;
+        }
+        break;
+
+        case 0x03: // params 6,7,8
+        {
+            for(int i = 0; i < nparams && i < 3; i++)
+            {
+                g_ctrl_buf[6 + i] = data[p] | (data[p+1] << 8);
+                p += 2;
+            }
+            g_ctrl_parts |= 0x04;
+        }
+        break;
+
+        case 0x04: // params 9,10
+        {
+            for(int i = 0; i < nparams && i < 2; i++)
+            {
+                g_ctrl_buf[9 + i] = data[p] | (data[p+1] << 8);
+                p += 2;
+            }
+            g_ctrl_parts |= 0x08;
+        }
+        break;
+
+        default:
+            return; // unknown frame, ignore
     }
 
-    // Once unpacked, send them to ApplyParameters()
-    ApplyParameters(params, nParams);
+    // if we got all 4 parts, apply
+    TryApplyAll();
 }
+
 
 // -------------------- Byte-by-byte parser ----------------------
 // ===============================================================
@@ -365,7 +429,7 @@ void ParseByte(uint8_t b)
     {
         case 0: // Waiting for first header byte (0xAA)
             if(b == HEADER1)
-            {     
+            {
                 state = 1;
             }
             break;
@@ -382,17 +446,33 @@ void ParseByte(uint8_t b)
             break;
 
         case 2: // Reading the 'length' byte (payload size)
+            //hw.SetLed(true);
             expectedLen = b + 1;
             rxIndex = 0;
             state = 3;
             break;
 
-        case 3: // Collecting remaining bytes
-            rxBuf[rxIndex++] = b;
-            if(rxIndex >= expectedLen)
+        case 3: // collecting payload
+             if (rxIndex == 7)
             {
-                ProcessFrame(rxBuf, rxIndex);
-                state = 0;
+                hw.SetLed(true);
+            }
+            rxBuf[rxIndex++] = b;
+            if(rxIndex >= expectedLen) // got full payload
+            {
+                //hw.SetLed(true);
+                // last byte in rxBuf is CRC
+                uint8_t crc_recv = rxBuf[expectedLen - 1];
+                uint8_t crc_calc = crc8(rxBuf, expectedLen - 1); // same poly
+                if(crc_recv == crc_calc)
+                {
+                    // process payload without CRC
+                    ProcessFrame(rxBuf, expectedLen - 1);
+                }
+                // else: bad frame, ignore
+
+                state   = 0;
+                rxIndex = 0;
             }
             break;
     }
@@ -405,13 +485,14 @@ void ParseByte(uint8_t b)
 // Polls the UART FIFO and feeds new bytes into the parser
 void ReceiveLoop()
 {
-    uint8_t byte;
-    // Try to read one byte (1 ms timeout)
-    if(uart.BlockingReceive(&byte, 1, 1) == UartHandler::Result::OK)
+    uint8_t b;
+    // try to pull out as many bytes as are waiting right now
+    while(uart.BlockingReceive(&b, 1, 0) == UartHandler::Result::OK)
     {
-        ParseByte(byte);
+        ParseByte(b);
     }
 }
+
 
 // ---------------------- UART Initialization --------------------
 // ===============================================================
@@ -421,10 +502,10 @@ void InitUart()
 {
    UartHandler::Config cfg;
     cfg.periph = UartHandler::Config::Peripheral::UART_4;
-    cfg.mode   = UartHandler::Config::Mode::RX; // RX only
-    cfg.baudrate = 115200;
-    cfg.pin_config.rx = {DSY_GPIOB, 8};  // D11
-    cfg.pin_config.tx = {DSY_GPIOB, 9};  // D12 (not used)
+    cfg.mode   = UartHandler::Config::Mode::TX_RX; // RX only
+    cfg.baudrate = 76800;
+    cfg.pin_config.rx = D11;  // D11
+    cfg.pin_config.tx = D12;  // D12 (not used)
 
     uart.Init(cfg);
 
@@ -473,8 +554,8 @@ int main(void)
 
     sc.a_sync    = SaiHandle::Config::Sync::SLAVE;   // SD_A (codec->MCU)
     sc.b_sync    = SaiHandle::Config::Sync::MASTER;  // clocks on *_B pins
-    sc.a_dir     = SaiHandle::Config::Direction::RECEIVE;   // SD_A = D26
-    sc.b_dir     = SaiHandle::Config::Direction::TRANSMIT;  // SD_B = D25
+    sc.a_dir     = SaiHandle::Config::Direction::TRANSMIT;   // SD_A = D26
+    sc.b_dir     = SaiHandle::Config::Direction::RECEIVE;  // SD_B = D25
 
     sc.pin_config.mclk = D24; // SAI2_MCLK_B
     sc.pin_config.sck  = D28; // SAI2_SCK_B
@@ -506,6 +587,6 @@ int main(void)
 
         ReceiveLoop(); // check for and parse UART frames
 
-        System::Delay(1);
+        //System::Delay(1);
     }
 }
