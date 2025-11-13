@@ -63,6 +63,32 @@ uint32_t midi_hold_ts[kNumMidiNotes];      // press order
 
 uint32_t global_press_counter = 0; // monotonic press counter
 
+// Gate pins and GPIO objects
+static const Pin kGatePins[4] = { D1, D2, D3, D4 };
+static GPIO      kGates[4];
+
+// “Priming”: don’t emit audio until each voice has been assigned once
+static uint8_t g_voice_primed_mask = 0;  // bit i set when voice i has been assigned
+static bool    g_synth_enabled     = false;
+
+// Count of currently held MIDI notes and gate helpers
+static inline int HeldCount()
+{
+    int c = 0;
+    for(int n = 0; n < kNumMidiNotes; ++n) c += midi_held[n] ? 1 : 0;
+    return c;
+}
+
+// Drive gates so that first N outputs are HIGH, the rest LOW (N = held keys)
+static void UpdateGates()
+{
+    int n = HeldCount();
+    if(n > 4) n = 4;
+    for(int i = 0; i < 4; ++i)
+         kGates[i].Write(i < n); // HIGH for first n, else LOW
+}
+
+
 static inline int  ActiveVoiceCount() 
 { 
     int c=0; 
@@ -75,10 +101,11 @@ static inline int  ActiveVoiceCount()
 
 static inline int FindFreeVoice()
 {
-  for(int v=0; v<kNumVoices; ++v)
-    if(!voices[v].active) return v; 
-  return -1;
+    for(int v = 0; v < kNumVoices; ++v)
+        if(!voices[v].active) return v; // never assigned yet
+    return -1;
 }
+
 // Among ACTIVE voices, pick index whose owner has the smallest (oldest) hold timestamp
 static int FindOldestActiveVoice()
 {
@@ -115,16 +142,20 @@ static void AssignVoiceToMidi(int voice_idx, int note)
     voices[voice_idx].active = true;
     voices[voice_idx].note   = note;
     midi_voice[note] = voice_idx;
+
+    g_voice_primed_mask |= (1u << voice_idx);
+    if(!g_synth_enabled && g_voice_primed_mask == 0x0F) // all 4 bits set
+        g_synth_enabled = true;
 }
 
 static void ReleaseVoice(int voice_idx)
 {
-    if(!voices[voice_idx].active) return;
+     // Do NOT stop the voice anymore; let it drone until stolen by a new NoteOn.
+    // Only clear ownership if it still maps to this voice.
     const int note = voices[voice_idx].note;
     if(note >= 0 && midi_voice[note] == voice_idx)
         midi_voice[note] = -1;
-    voices[voice_idx].active = false;
-    voices[voice_idx].note   = -1;
+    // Keep voices[voice_idx].active = true; and keep .note unchanged
 }
 
 static void OnMidiNoteOn(int note)
@@ -134,16 +165,23 @@ static void OnMidiNoteOn(int note)
     midi_hold_ts[note] = ++global_press_counter;
 
     int free_v = FindFreeVoice();
-    if(free_v >= 0) { AssignVoiceToMidi(free_v, note); return; }
+    if(free_v >= 0)
+    {
+        AssignVoiceToMidi(free_v, note);
+        UpdateGates();
+        return;
+    }
 
     // steal from oldest active
     int steal_vi = FindOldestActiveVoice();
     if(steal_vi >= 0)
     {
         const int victim_note = voices[steal_vi].note;
-        midi_voice[victim_note] = -1; // victim remains held but unassigned
+        if(victim_note >= 0 && midi_voice[victim_note] == steal_vi)
+            midi_voice[victim_note] = -1;
         AssignVoiceToMidi(steal_vi, note);
     }
+    UpdateGates();
 }
 
 static void OnMidiNoteOff(int note)
@@ -151,19 +189,15 @@ static void OnMidiNoteOff(int note)
     if(note < 0 || note >= kNumMidiNotes) return;
     midi_held[note] = false;
 
+    // We do NOT stop any oscillator here. Just release ownership mapping if any.
     int owned_v = midi_voice[note];
     if(owned_v >= 0)
         ReleaseVoice(owned_v);
 
-    // Restitution: hand any free voices to oldest waiting MIDI notes
-    while(true)
-    {
-        int wait_note = FindOldestWaitingMidiNote();
-        int v = FindFreeVoice();
-        if(wait_note < 0 || v < 0) break;
-        AssignVoiceToMidi(v, wait_note);
-    }
+    // No restitution now (optional). Voices keep droning until stolen.
+    UpdateGates();
 }
+
 
 // ===== MIDI event handling =====
 static void HandleMidiMessage(MidiEvent m)
@@ -189,24 +223,24 @@ static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer
     const float mix_scale = 1.f / (2.f * kNumVoices);
 
     // Per-voice parameter update
-    for(int v=0; v<kNumVoices; ++v)
+    for(int v = 0; v < kNumVoices; ++v)
     {
-        if(voices[v].active)
-        {
-            const float f = mtof(static_cast<float>(voices[v].note));
-            osc1[v].SetFreq(f * detuneFactor1);
-            osc1[v].SetAmp(volume1);
-            osc1[v].SetPw(pulseW1);
+        // If a voice was never assigned, give it some placeholder pitch
+        int note = voices[v].note >= 0 ? voices[v].note : 60; // middle C fallback
+        const float f = mtof(static_cast<float>(note));
 
-            osc2[v].SetFreq(f * detuneFactor2);
-            osc2[v].SetAmp(volume2);
-            osc2[v].SetPw(pulseW2);
-        }
-        else
-        {
-            osc1[v].SetAmp(0.f);
-            osc2[v].SetAmp(0.f);
-        }
+        osc1[v].SetFreq(f * detuneFactor1);
+        osc2[v].SetFreq(f * detuneFactor2);
+
+        // If not yet primed, hard-mute. Once primed, amplitudes follow volume params.
+        const float amp = g_synth_enabled ? 0.8f : 0.0f;
+        const float amp2 = g_synth_enabled ? 0.8f : 0.0f;
+
+        osc1[v].SetAmp(amp);
+        osc1[v].SetPw(pulseW1);
+
+        osc2[v].SetAmp(amp2);
+        osc2[v].SetPw(pulseW2);
     }
 
     for(size_t i = 0; i < size; ++i)
@@ -516,9 +550,14 @@ int main(void)
 {
     hw.Configure();
     hw.Init();
-
-
     hw.SetAudioBlockSize(48); // 1ms @ 48kHz; multiple of 4
+
+    // Init gate pins as outputs and drive LOW
+    for(int i = 0; i < 4; ++i)
+    {
+        kGates[i].Init(kGatePins[i], GPIO::Mode::OUTPUT);
+        kGates[i].Write(false); // LOW
+    }
 
     // MIDI UART (DIN)
     {
@@ -583,10 +622,11 @@ int main(void)
         // MIDI processing
         midi.Listen();
         while(midi.HasEvents())
-          HandleMidiMessage(midi.PopEvent());
+            HandleMidiMessage(midi.PopEvent());
 
-        ReceiveLoop(); // check for and parse UART frames
+        // Keep gates in sync even if no new events in this tick
+        UpdateGates();
 
-        //System::Delay(1);
+        ReceiveLoop();
     }
 }
