@@ -25,15 +25,18 @@ static constexpr uint8_t HEADER2 = 0x55;
 static constexpr int     MAX_FRAME = 128;
 
 // ------------------- Receive buffer variables -------------------
+const size_t uart_buff_size = 18;
+uint8_t DMA_BUFFER_MEM_SECTION uart_rx_buff[uart_buff_size];
+
 uint8_t rxBuf[MAX_FRAME];
 int     rxIndex = 0;
 int     expectedLen = 0;
 int     state = 0;
-static uint16_t g_ctrl_buf[11];
+static uint16_t g_ctrl_buf[8];
 static uint8_t  g_ctrl_parts = 0;
 
 // ===== Params =====
-float volume1 = 0.5f, volume2 = 0.5f; 
+float volume1 = 1.0f, volume2 = 1.0f; 
 float pulseW1 = 0.5f, pulseW2 = 0.5f;
 float detune1 = 0.5f;
 float detune2 = 0.5f;
@@ -189,10 +192,12 @@ static void HandleMidiMessage(MidiEvent m)
 // ===== Audio Callback =====
 static void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
-    const float cents1 = (detune1 - 0.5f) * 400.0f;
-    const float cents2 = (detune2 - 0.5f) * 400.0f;
-    const float detuneFactor1 = powf(2.0f, cents1 / 1200.0f);
-    const float detuneFactor2 = powf(2.0f, cents2 / 1200.0f);
+    // const float cents1 = (detune1 - 0.5f) * 400.0f;
+    // const float cents2 = (detune2 - 0.5f) * 400.0f;
+    // const float detuneFactor1 = powf(2.0f, cents1 / 1200.0f);
+    // const float detuneFactor2 = powf(2.0f, cents2 / 1200.0f);
+    const float detuneFactor1 = powf(2.0f, ((2*detune1) - 1)); // Octave ranging code
+    const float detuneFactor2 = powf(2.0f, ((2*detune2) - 1));
     const float mix_scale = 1.f / (2.f * kNumVoices);
     
     for(int v = 0; v < kNumVoices; ++v)
@@ -253,18 +258,18 @@ static inline float fmap_range(uint16_t v, uint16_t in_min, uint16_t in_max, flo
 
 void ApplyParameters(uint16_t* vals, int n)
 {
-    if(n < 11) return;
+    //if(n < 11) return;
 
-    volume1 = fmap_range(vals[0], 0, 65535, 0.0f, 1.0f);
-    pulseW1 = fmap_range(vals[1], 0, 65535, 0.0f, 1.0f); 
-    detune1 = fmap_range(vals[2], 0, 65535, 0.0f, 1.0f);
-    float waveSel1 = fmap_range(vals[3], 0, 65535, 0.0f, 7.99f); 
+    float waveSel1 = fmap_range(vals[0], 0, 65535, 0.0f, 7.99f); 
+    detune1 = fmap_range(vals[1], 0, 65535, 0.0f, 1.0f);
+    pulseW1 = fmap_range(vals[2], 0, 65535, 0.0f, 1.0f); 
+    volume1 = fmap_range(vals[3], 0, 65535, 0.0f, 1.0f);
 
-    volume2 = fmap_range(vals[4], 0, 65535, 0.0f, 1.0f);
-    pulseW2 = fmap_range(vals[5], 0, 65535, 0.0f, 1.0f);  
-    detune2 = fmap_range(vals[6], 0, 65535, 0.0f, 1.0f);
-    float waveSel2 = fmap_range(vals[7], 0, 65535, 0.0f, 7.99f); 
-
+    float waveSel2 = fmap_range(vals[4], 0, 65535, 0.0f, 7.99f); 
+    detune2 = fmap_range(vals[5], 0, 65535, 0.0f, 1.0f);
+    pulseW2 = fmap_range(vals[6], 0, 65535, 0.0f, 1.0f);  
+    volume2 = fmap_range(vals[7], 0, 65535, 0.0f, 1.0f);
+    
     int waveIndex1 = static_cast<int>(waveSel1);
     int waveIndex2 = static_cast<int>(waveSel2);
     for(int v = 0; v < kNumVoices; ++v)
@@ -292,94 +297,106 @@ void ApplyParameters(uint16_t* vals, int n)
     }
 }
 
-static void TryApplyAll()
-{
-    if(g_ctrl_parts == 0x0F) 
-    {
-        ApplyParameters(g_ctrl_buf, 11);
-        g_ctrl_parts = 0; 
-    }
-}
+// static void TryApplyAll()
+// {
+//     if(g_ctrl_parts == 0x0F) 
+//     {
+//         ApplyParameters(g_ctrl_buf, 11);
+//         g_ctrl_parts = 0; 
+//     }
+// }
 
-void ProcessFrame(uint8_t* data, int n)
-{
-    if(n < 1 + 1 + 4 + 1) return;
-    int p = 0;
-    uint8_t len  = data[p++]; 
-    uint8_t type = data[p++]; 
-    p += 4; // skip seq
+// void ProcessFrame(uint8_t* data, int n)
+// {
+//     if(n < 1 + 1 + 4 + 1) return;
+//     int p = 0;
+//     uint8_t len  = data[p++]; 
+//     uint8_t type = data[p++]; 
+//     p += 4; // skip seq
 
-    int param_bytes = len - (1 + 4);
-    int nparams = param_bytes / 2;
-    if(nparams <= 0) return;
+//     int param_bytes = len - (1 + 4);
+//     int nparams = param_bytes / 2;
+//     if(nparams <= 0) return;
 
-    switch(type)
-    {
-        case 0x01: 
-            for(int i = 0; i < nparams && i < 3; i++) {
-                g_ctrl_buf[0 + i] = data[p] | (data[p+1] << 8);
-                p += 2;
-            }
-            g_ctrl_parts |= 0x01;
-            break;
-        case 0x02: 
-            for(int i = 0; i < nparams && i < 3; i++) {
-                g_ctrl_buf[3 + i] = data[p] | (data[p+1] << 8);
-                p += 2;
-            }
-            g_ctrl_parts |= 0x02;
-            break;
-        case 0x03: 
-            for(int i = 0; i < nparams && i < 3; i++) {
-                g_ctrl_buf[6 + i] = data[p] | (data[p+1] << 8);
-                p += 2;
-            }
-            g_ctrl_parts |= 0x04;
-            break;
-        case 0x04: 
-            for(int i = 0; i < nparams && i < 2; i++) {
-                g_ctrl_buf[9 + i] = data[p] | (data[p+1] << 8);
-                p += 2;
-            }
-            g_ctrl_parts |= 0x08;
-            break;
-    }
-    TryApplyAll();
-}
+//     switch(type)
+//     {
+//         case 0x01: 
+//             for(int i = 0; i < nparams && i < 3; i++) {
+//                 g_ctrl_buf[0 + i] = data[p] | (data[p+1] << 8);
+//                 p += 2;
+//             }
+//             g_ctrl_parts |= 0x01;
+//             break;
+//         case 0x02: 
+//             for(int i = 0; i < nparams && i < 3; i++) {
+//                 g_ctrl_buf[3 + i] = data[p] | (data[p+1] << 8);
+//                 p += 2;
+//             }
+//             g_ctrl_parts |= 0x02;
+//             break;
+//         case 0x03: 
+//             for(int i = 0; i < nparams && i < 3; i++) {
+//                 g_ctrl_buf[6 + i] = data[p] | (data[p+1] << 8);
+//                 p += 2;
+//             }
+//             g_ctrl_parts |= 0x04;
+//             break;
+//         case 0x04: 
+//             for(int i = 0; i < nparams && i < 2; i++) {
+//                 g_ctrl_buf[9 + i] = data[p] | (data[p+1] << 8);
+//                 p += 2;
+//             }
+//             g_ctrl_parts |= 0x08;
+//             break;
+//     }
+//     TryApplyAll();
+// }
 
-void ParseByte(uint8_t b)
-{
-    switch(state)
-    {
-        case 0: if(b == HEADER1) state = 1; break;
-        case 1: if(b == HEADER2) state = 2; else state = 0; break;
-        case 2: 
-            expectedLen = b + 1;
-            rxIndex = 0;
-            state = 3;
-            break;
-        case 3: 
-            rxBuf[rxIndex++] = b;
-            if(rxIndex >= expectedLen)
-            {
-                uint8_t crc_recv = rxBuf[expectedLen - 1];
-                uint8_t crc_calc = crc8(rxBuf, expectedLen - 1); 
-                if(crc_recv == crc_calc)
-                    ProcessFrame(rxBuf, expectedLen - 1);
-                state   = 0;
-                rxIndex = 0;
-            }
-            break;
-    }
-}
+// void ParseByte(uint8_t b)
+// {
+//     switch(state)
+//     {
+//         case 0: if(b == HEADER1) state = 1; break;
+//         case 1: if(b == HEADER2) state = 2; else state = 0; break;
+//         case 2: 
+//             expectedLen = b + 1;
+//             rxIndex = 0;
+//             state = 3;
+//             break;
+//         case 3: 
+//             rxBuf[rxIndex++] = b;
+//             if(rxIndex >= expectedLen)
+//             {
+//                 uint8_t crc_recv = rxBuf[expectedLen - 1];
+//                 uint8_t crc_calc = crc8(rxBuf, expectedLen - 1); 
+//                 if(crc_recv == crc_calc)
+//                     ProcessFrame(rxBuf, expectedLen - 1);
+//                 state   = 0;
+//                 rxIndex = 0;
+//             }
+//             break;
+//     }
+// }
 
-void ReceiveLoop()
-{
-    uint8_t b;
-    while(uart.BlockingReceive(&b, 1, 0) == UartHandler::Result::OK)
-    {
-        ParseByte(b);
-    }
+// void ReceiveLoop()
+// {
+//     //uart.BlockingReceive(uart_rx_buff, sizeof(uart_rx_buff), 30);
+//     // while(uart.BlockingReceive(b, 1, 0) == UartHandler::Result::OK)
+//     // {
+//     //     ParseByte(b);
+//     // }
+// }
+
+void GetKnobs() { // function that polls ESP32
+    uint8_t command = 0x69; // command to send 
+    for(uint8_t i = 0; i < 18; i++)
+        uart_rx_buff[i] = 0x00;
+    uart.BlockingTransmit(&command, 1, 10); // Send a knob request commnand to ESP32
+    uart.BlockingReceive(uart_rx_buff, 18, 200); // Wait (up to 200ms) for ESP32 to reply with knob data (18bytes)
+    uint16_t knob_values[8] = {0x0000};
+    for(uint8_t i = 0; i < 8; i++)
+        knob_values[i] = (uart_rx_buff[(2 * i) + 1] << 8) | uart_rx_buff[(2*i) + 2];
+    ApplyParameters(knob_values, 8);
 }
 
 void InitUart()
@@ -451,7 +468,7 @@ int main(void)
     sc.pin_config.sa   = D26; 
     sc.pin_config.sb   = D25; 
     sai2.Init(sc);
-    
+
     // 5. UART and Audio Start
     InitUart();      
 
@@ -462,14 +479,16 @@ int main(void)
 
     hw.audio_handle.Init(audio_cfg, hw.AudioSaiHandle(), sai2);
     hw.StartAudio(AudioCallback);
-    
+
     // 6. Main Loop
     while(true)
     {
         midi.Listen();
         while(midi.HasEvents())
+        {
             HandleMidiMessage(midi.PopEvent());
-
-        ReceiveLoop();
+            GetKnobs();
+        }
+        //ReceiveLoop();
     }
 }
