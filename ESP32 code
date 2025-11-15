@@ -26,7 +26,7 @@ uint8_t  digiVals[N_DIG];
 
 // which MUX inputs map to digipots and Daisy
 uint8_t digiRoute[N_DIG] = {4,5,14,13,12,11,30,25,28,26,27,29};
-uint8_t daisyRoute[11]   = {0,1,2,3,18,16,17,19,15,24,31};
+uint8_t daisyRoute[8]   = {0,1,2,3,18,16,17,19};
 
 // =================== UTILITIES ======================
 inline void setAddr(int s0,int s1,int s2,int s3,int ch){
@@ -74,57 +74,6 @@ void setDigi(uint8_t index,uint8_t val){
 
 static inline uint8_t map16to8(uint16_t v){ return v >> 8; }
 
-// =================== UART FRAME =====================
-uint8_t crc8_range(const uint8_t* d, int off, int len)
-{
-  uint8_t c = 0;
-  for(int i = 0; i < len; i++)
-  {
-    c ^= d[off + i];
-    for(int b = 0; b < 8; b++)
-      c = (c & 0x80) ? (c << 1) ^ 0x31 : (c << 1);
-  }
-  return c;
-}
-
-void sendCtrlFrame(uint8_t type,
-                   uint32_t seq,
-                   const uint16_t *params,
-                   int nparams)
-{
-  uint8_t pkt[32]; // small now
-  int p = 0;
-
-  // header
-  pkt[p++] = 0xAA;
-  pkt[p++] = 0x55;
-
-  // payload length = 1(type) + 4(seq) + nparams*2
-  uint8_t len = 1 + 4 + (uint8_t)(nparams * 2);
-  pkt[p++] = len;
-
-  // type
-  pkt[p++] = type;
-
-  // seq (little endian)
-  pkt[p++] = (uint8_t)(seq);
-  pkt[p++] = (uint8_t)(seq >> 8);
-  pkt[p++] = (uint8_t)(seq >> 16);
-  pkt[p++] = (uint8_t)(seq >> 24);
-
-  // params
-  for(int i = 0; i < nparams; i++)
-  {
-    uint16_t v = params[i];
-    pkt[p++] = (uint8_t)(v & 0xFF);
-    pkt[p++] = (uint8_t)(v >> 8);
-  }
-
-  // CRC over len..last param
-  pkt[p++] = crc8_range(pkt, 2, len);
-
-  Serial2.write(pkt, p);
-}
 
 // =================== SETUP / LOOP ===================
 void setup(){
@@ -161,10 +110,32 @@ void setup(){
     digiVals[ch+6] = 128;
   }
 }
+uint8_t tx_bytes[18] = 
+{
+  0xAA,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x55
+};
+
+uint8_t rx_byte = 0x00;
+uint16_t p[11];
 
 void loop(){
-  static uint32_t seq = 0;
-
   uint16_t m1[16], m2[16];
   scanMux16(M1_S0, M1_S1, M1_S2, M1_S3, M1_EN, ADC_M1, m1);
   scanMux16(M2_S0, M2_S1, M2_S2, M2_S3, M2_EN, ADC_M2, m2);
@@ -179,31 +150,26 @@ void loop(){
     uint8_t v8 = map16to8(muxVals[digiRoute[i]]);
     setDigi(i, v8);
   }
-uint16_t p[11];
-  p[0]  = muxVals[daisyRoute[0]];
-  p[1]  = muxVals[daisyRoute[1]];
-  p[2]  = muxVals[daisyRoute[2]];
-  p[3]  = muxVals[daisyRoute[3]];
-  p[4]  = muxVals[daisyRoute[4]];
-  p[5]  = muxVals[daisyRoute[5]];
-  p[6]  = muxVals[daisyRoute[6]];
-  p[7]  = muxVals[daisyRoute[7]];
-  p[8]  = muxVals[daisyRoute[8]];
-  p[9]  = muxVals[daisyRoute[9]];
-  p[10] = muxVals[daisyRoute[10]];
 
-  sendCtrlFrame(0x01, seq,     &p[0], 3);
-  delayMicroseconds(1000);  // 0.5 ms
+  if(Serial2.available() > 0)
+  {
+    rx_byte = Serial2.read();
+    if(rx_byte == 0x69)
+    {
+      for(uint8_t i = 0; i < 8; i++)
+        p[i] = muxVals[daisyRoute[i]];
 
-  sendCtrlFrame(0x02, seq + 1, &p[3], 3);
-  delayMicroseconds(1000);
-
-  sendCtrlFrame(0x03, seq + 2, &p[6], 3);
-  delayMicroseconds(1000);
-
-  sendCtrlFrame(0x04, seq + 3, &p[9], 2);
-
-  seq += 4;
-  delay(5); // big pause until next group
-
+      tx_bytes[0] = 0xAA; // Start marker
+      for(uint8_t i = 1; i < 17; i++)
+      {
+        if((i % 2) == 1) // MSByte
+          tx_bytes[i] = (uint8_t)((p[(i-1) >> 1] & 0xFF00) >> 8); // Copy top half of 16bit knob to first byte
+        else // LSByte
+          tx_bytes[i] = (uint8_t)(p[(i-1) >> 1] & 0x00FF); // Copy bottom half of 16bit knob to second byte
+      }
+      tx_bytes[17] = 0x55; // End marker
+      Serial2.write(tx_bytes, 18);
+    }
+  }
+  delayMicroseconds(100);
 }
