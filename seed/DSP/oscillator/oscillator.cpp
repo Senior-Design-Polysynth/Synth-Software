@@ -1,3 +1,18 @@
+// ============================================================================
+// HYBRID 4-VOICE POLYSYNTH ENGINE
+// ============================================================================
+// Features:
+// - 4 Discrete Voices (mapped to 4 Audio Outputs)
+// - 12 Synthesis Modes (Analog Modeling, FM, Digital/Lo-Fi)
+// - Live UART Control for Knobs
+// - MIDI Input with Mod Wheel Vibrato
+//
+// OPTIMIZATION NOTES:
+// - Audio Engine runs at 48kHz / Block Size 16 for low latency.
+// - Uses a Fast Sine LUT (Look Up Table) to prevent CPU overload during complex FM.
+// - Uses "Target vs Current" variable locking to prevent Audio Glitches during parameter changes.
+// - UART uses a "Flush & Block" strategy with Hysteresis to prevent control jitter.
+
 #include "daisysp.h"
 #include "daisy_seed.h"
 #include "hid/midi.h"
@@ -16,58 +31,68 @@ static constexpr int kNumVoices = 4;
 
 UartHandler uart;
 
-// UART Buffer
+// UART Buffer: Holds incoming knob data (18 bytes: 2 Header + 16 Data)
 uint8_t uart_rx_buff[18]; 
 uint32_t last_knob_update = 0;
 
-// Defaults
+// Knob Defaults
+// Initialized to 0xFFFF to ensure the system forces an update immediately on boot.
 uint16_t last_knob_values[8] = {
-    0x0000, 0x8000, 0x8000, 0xFFFF, 
-    0x0000, 0x8000, 0x8000, 0xFFFF
+    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 
+    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
 }; 
 
-// Params
+// Synthesis Parameters
 float volume1 = 1.0f, volume2 = 1.0f; 
 float pulseW1 = 0.5f, pulseW2 = 0.5f;
 float detune1 = 0.5f, detune2 = 0.5f;
-int waveIndex1 = 0;
-int waveIndex2 = 0;
-float g_bend_mult = 1.0f; 
+float g_bend_mult = 1.0f; // Pitch Bend Multiplier
 
-// THREAD SAFETY VARIABLES
+// Mod Wheel State
+float modWheel = 0.0f;   // 0.0 to 1.0
+float lfoPhase = 0.0f;   // Running phase for Vibrato LFO
+
+// --- THREAD SAFETY VARIABLES ---
+// These prevent "Race Conditions" where the Main Loop changes a waveform type
+// while the Audio Interrupt is trying to calculate it, causing a glitch/pop.
+// 1. Main Loop writes to 'target' variables.
+// 2. Audio Loop reads 'target', compares to 'current', and updates safely between samples.
 volatile int target_wave_idx_1 = 0;
 volatile int target_wave_idx_2 = 0;
 
 int current_wave_idx_1 = -1;
 int current_wave_idx_2 = -1;
 
+// Synthesis Objects
 Oscillator osc1[kNumVoices];
 Oscillator osc2[kNumVoices];
 WhiteNoise white_noise[kNumVoices]; 
 
-// Anti-Aliasing Filter
-float smooth_mem[kNumVoices];
-
 MidiUartHandler midi;
 
+// Voice Architecture
 struct Voice {
-    bool     active = false; 
-    bool     gate   = false; 
-    int      note   = -1;    
+    bool     active = false; // Is the oscillator running?
+    bool     gate   = false; // Is the key physically held?
+    int      note   = -1;    // Current MIDI note
 };
 Voice voices[kNumVoices];
 
+// Polyphony Management
 static constexpr int kNumMidiNotes = 128;
 int      midi_voice[kNumMidiNotes];        
 uint32_t midi_hold_ts[kNumMidiNotes];      
 uint32_t global_press_counter = 0;         
 
+// Hardware Gates (D15-D18)
 static const Pin kGatePins[4] = { D15, D16, D17, D18 };
 static GPIO      kGates[4];
 
 // ==========================================
 // 2. HELPER FUNCTIONS
 // ==========================================
+
+// Updates the physical GPIO pins to match the software voice state.
 static void UpdateGates()
 {
     bool any_gate_active = false;
@@ -75,9 +100,11 @@ static void UpdateGates()
         kGates[i].Write(voices[i].gate);
         if(voices[i].gate) any_gate_active = true;
     }
-    hw.SetLed(any_gate_active);
+    hw.SetLed(any_gate_active); // Onboard LED feedback
 }
 
+// Finds a voice that is completely idle (No Gate, No Sound).
+// If none, finds a voice that is just releasing (No Gate).
 static inline int FindFreeVoice()
 {
     for(int v = 0; v < kNumVoices; ++v)
@@ -87,6 +114,7 @@ static inline int FindFreeVoice()
     return -1;
 }
 
+// Steals the oldest voice if polyphony is full.
 static int FindOldestActiveVoice()
 {
     int oldest_vi = -1;
@@ -100,6 +128,7 @@ static int FindOldestActiveVoice()
     return oldest_vi;
 }
 
+// Maps a MIDI note to a specific hardware voice index.
 static void AssignVoiceToMidi(int voice_idx, int note)
 {
     int old_note = voices[voice_idx].note;
@@ -117,8 +146,15 @@ static void ReleaseVoice(int voice_idx)
     const int note = voices[voice_idx].note;
     if(note >= 0 && midi_voice[note] == voice_idx)
         midi_voice[note] = -1;
+    
     voices[voice_idx].gate = false; 
+    // NOTE: We leave 'active' TRUE here so the oscillator continues to run.
+    // This allows external Analog Envelopes to handle the release tail naturally.
 }
+
+// ==========================================
+// 3. MIDI EVENT HANDLERS
+// ==========================================
 
 static void OnMidiNoteOn(int note)
 {
@@ -145,6 +181,7 @@ static void OnMidiNoteOff(int note)
     UpdateGates();
 }
 
+// Converts 14-bit pitch bend to frequency multiplier (+/- 2 semitones)
 static void HandlePitchBend(MidiEvent m)
 {
     uint16_t val = (m.data[1] << 7) | m.data[0];
@@ -152,16 +189,27 @@ static void HandlePitchBend(MidiEvent m)
     g_bend_mult = powf(2.0f, (norm * 2.0f) / 12.0f);
 }
 
+// Reads Mod Wheel (CC 1) for Vibrato depth
+static void HandleControlChange(MidiEvent m)
+{
+    if (m.data[0] == 1) {
+        modWheel = m.data[1] / 127.0f;
+    }
+}
+
 static void HandleMidiMessage(MidiEvent m)
 {
     if(m.type == NoteOn && m.data[1] > 0) OnMidiNoteOn(m.data[0]);
     else if(m.type == NoteOff || (m.type == NoteOn && m.data[1] == 0)) OnMidiNoteOff(m.data[0]);
     else if(m.type == PitchBend) HandlePitchBend(m);
+    else if(m.type == ControlChange) HandleControlChange(m);
 }
 
 // ==========================================
-// 3. FAST SINE LUT
+// 4. FAST SINE LOOKUP TABLE
 // ==========================================
+// Standard sinf() is too CPU-heavy for wavefolding 4 voices at Block 16.
+// This LUT makes the math ~10x faster, preventing audio stuttering.
 static float sine_lut[2048];
 
 void InitSineLut() {
@@ -171,18 +219,22 @@ void InitSineLut() {
 }
 
 static inline float FastSin(float rad) {
+    // Convert radians to table index
     float v = (rad * 325.94932f) + 1024000.0f; 
     int i = static_cast<int>(v);
     float frac = v - i;
+    // Linear Interpolation for smooth results
     float a = sine_lut[i & 2047];
     float b = sine_lut[(i + 1) & 2047];
     return a + (b - a) * frac;
 }
 
 // ==========================================
-// 4. AUDIO GENERATION
+// 5. AUDIO GENERATION CORE
 // ==========================================
 
+// Safely updates the oscillator types at the start of a block.
+// This prevents the "Undefined State" glitches that happen if you change types mid-sample.
 void UpdateOscillators() {
     if (target_wave_idx_1 == current_wave_idx_1 && target_wave_idx_2 == current_wave_idx_2) return;
 
@@ -190,18 +242,19 @@ void UpdateOscillators() {
     current_wave_idx_2 = target_wave_idx_2;
 
     for(int v = 0; v < kNumVoices; ++v) {
-        // OSC 1
+        // --- OSC 1 MAPPING ---
         int w1 = current_wave_idx_1;
         if (w1 <= 3) {
+            // Analog Basics
             if(w1==0) osc1[v].SetWaveform(Oscillator::WAVE_SIN);
             else if(w1==1) osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
             else if(w1==2) osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
             else osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
-        } else if (w1 == 4) osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI);
-        else if (w1 == 11) osc1[v].SetWaveform(Oscillator::WAVE_SIN);
-        else osc1[v].SetWaveform(Oscillator::WAVE_RAMP);
+        } else if (w1 == 4) osc1[v].SetWaveform(Oscillator::WAVE_POLYBLEP_TRI); // Staircase Base
+        else if (w1 == 11) osc1[v].SetWaveform(Oscillator::WAVE_SIN); // Chaos Base
+        else osc1[v].SetWaveform(Oscillator::WAVE_RAMP); // FM Base
 
-        // OSC 2
+        // --- OSC 2 MAPPING ---
         int w2 = current_wave_idx_2;
         if (w2 <= 3) {
             if(w2==0) osc2[v].SetWaveform(Oscillator::WAVE_SIN);
@@ -214,34 +267,38 @@ void UpdateOscillators() {
     }
 }
 
+// Calculates one sample of audio. 
+// Uses FastSin for all complex shaping to keep CPU usage low.
 static inline float GenerateWave(int mode, Oscillator& osc, WhiteNoise& wn, float pw)
 {
     float raw = osc.Process();
 
     switch(mode) {
-        case 0: return FastSin(raw * (1.0f + (pw * 4.0f))); 
+        case 0: return FastSin(raw * (1.0f + (pw * 4.0f))); // Sine Fold
         case 1: { 
             float val = raw * (1.0f + (pw * 4.0f));
-            return FastSin(val); 
+            return FastSin(val); // Triangle Fold
         }
-        case 2: return raw; 
+        case 2: return raw; // Square (Native PWM)
         case 3: { 
             float val = raw * (1.0f + (pw * 4.0f));
-            return FastSin(val);
+            return FastSin(val); // Saw Fold
         }
-        case 4: { // Staircase
-             // Exponential curve (pw*pw) keeps steps low/crunchy for longer.
-             // 0% = 2 steps. 50% = ~10 steps. 100% = 34 steps.
+        case 4: { // Staircase (Bitcrush Effect)
+             // Exponential step count for better low-res control range
              float steps = 2.0f + (pw * pw * 32.0f); 
              return floorf(raw * steps) / steps;
         }
-        case 5: return FastSin(raw * PI_F * (1.0f + (pw * 14.0f))); 
+        case 5: return FastSin(raw * PI_F * (1.0f + (pw * 14.0f))); // Alien Sync
+        
+        // --- FM Synthesis ---
         case 6: return FastSin((raw * PI_F) + (FastSin(raw * PI_F) * (pw * 4.0f)));
         case 7: return FastSin((raw * PI_F) + (FastSin(raw * 2.0f * PI_F) * (pw * 5.0f)));
         case 8: return FastSin((raw * PI_F) + (FastSin(raw * 1.41f * PI_F) * (pw * 6.0f)));
         case 9: return FastSin((raw * PI_F) + (FastSin(raw * 5.0f * PI_F) * (pw * 3.0f)));
         case 10: return FastSin(raw * PI_F * (1.0f + (pw * 12.0f))) * (1.0f - fabsf(raw));
-        case 11: {
+        
+        case 11: { // Chaos / Noise Mod
             float noise = wn.Process() * (pw * 4.0f);
             return FastSin((raw * PI_F) + noise);
         }
@@ -249,18 +306,27 @@ static inline float GenerateWave(int mode, Oscillator& osc, WhiteNoise& wn, floa
     }
 }
 
+// Audio Interrupt Handler
 void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
     UpdateOscillators();
 
-    const float pitch1 = powf(2.0f, ((2*detune1) - 1)) * g_bend_mult; 
-    const float pitch2 = powf(2.0f, ((2*detune2) - 1)) * g_bend_mult;
+    // --- VIBRATO LFO ---
+    // Simple LFO at ~5Hz. Mod Wheel controls depth.
+    lfoPhase += 0.00065f * size; 
+    if(lfoPhase > TWOPI_F) lfoPhase -= TWOPI_F;
+    float vibrato_val = FastSin(lfoPhase) * modWheel * 0.05f; // +/- 5% Pitch
+    
+    // Calculate final pitch multipliers
+    const float pitch1 = powf(2.0f, ((2*detune1) - 1)) * g_bend_mult * (1.0f + vibrato_val);
+    const float pitch2 = powf(2.0f, ((2*detune2) - 1)) * g_bend_mult * (1.0f + vibrato_val);
     const float mix_scale = 0.25f; 
     
-    // Safe Pulse Width: 0.5 (Square) to 0.95 (Thin). Prevents DC silence.
+    // "Safe" Pulse Width for Squares: 0.5 - 0.95 to prevent silence/DC offset.
     float safe_pw1 = 0.5f + (pulseW1 * 0.45f); 
     float safe_pw2 = 0.5f + (pulseW2 * 0.45f);
 
+    // --- PARAMETER UPDATE LOOP ---
     for(int v = 0; v < kNumVoices; ++v)
     {
         if(voices[v].active) {
@@ -269,15 +335,12 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
             osc1[v].SetFreq(f * pitch1);
             osc2[v].SetFreq(f * pitch2);
             osc1[v].SetAmp(1.0f); osc2[v].SetAmp(1.0f);
-            
-            // Oscillators get Safe PW
-            osc1[v].SetPw(safe_pw1);  
-            osc2[v].SetPw(safe_pw2);
-            
+            osc1[v].SetPw(safe_pw1);  osc2[v].SetPw(safe_pw2);
             white_noise[v].SetAmp(1.0f); 
         }
     }
 
+    // --- SAMPLE GENERATION LOOP ---
     for(size_t i = 0; i < size; ++i)
     {
         for(int v = 0; v < kNumVoices; ++v) 
@@ -286,13 +349,14 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
             
             if(voices[v].active) 
             {
-                // GenerateWave gets Raw PW for full effect range
+                // Generate using RAW pulseW for full range on shapes/folders
                 float sig1 = GenerateWave(current_wave_idx_1, osc1[v], white_noise[v], pulseW1);
                 float sig2 = GenerateWave(current_wave_idx_2, osc2[v], white_noise[v], pulseW2);
                 output_sample = (sig1 * volume1) + (sig2 * volume2);
                 output_sample *= mix_scale;
             }
 
+            // Hard-panned discrete outputs
             switch(v) {
                 case 0: out[0][i] = output_sample; break;
                 case 1: out[1][i] = output_sample; break;
@@ -304,7 +368,7 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 }
 
 // ==========================================
-// 5. PARAMETER CONTROL
+// 6. PARAMETER MAPPING
 // ==========================================
 static inline float fmap_range(uint16_t v, uint16_t in_min, uint16_t in_max, float out_min, float out_max)
 {
@@ -324,9 +388,7 @@ void ApplyParameters(uint16_t* vals)
     pulseW2        = fmap_range(vals[6], 0, 65535, 0.0f, 1.0f);  
     volume2        = fmap_range(vals[7], 0, 65535, 0.0f, 1.0f);
     
-    int newW1 = static_cast<int>(waveSel1);
-    int newW2 = static_cast<int>(waveSel2);
-    
+    // THREAD SAFETY: Only update the targets here.
     target_wave_idx_1 = static_cast<int>(waveSel1);
     target_wave_idx_2 = static_cast<int>(waveSel2);
 }
@@ -343,16 +405,20 @@ void InitUart()
 }
 
 // ==========================================
-// 6. CONTROL LOOP
+// 7. CONTROL LOOP
 // ==========================================
+// Reads knobs via UART with Hysteresis to prevent jitter.
 void GetKnobs() 
 { 
+    // 1. Flush RX buffer to ensure we don't read old/misaligned data
     uint8_t trash;
     while(uart.BlockingReceive(&trash, 1, 0) == UartHandler::Result::OK);
 
+    // 2. Request new data
     uint8_t command = 0x69; 
     uart.BlockingTransmit(&command, 1, 10); 
     
+    // 3. Wait for reply (40ms timeout ensures data arrives)
     UartHandler::Result res = uart.BlockingReceive(uart_rx_buff, 18, 40); 
 
     if(res == UartHandler::Result::OK)
@@ -361,7 +427,9 @@ void GetKnobs()
         for(uint8_t i = 0; i < 8; i++)
             current_vals[i] = (uart_rx_buff[(2 * i) + 1] << 8) | uart_rx_buff[(2*i) + 2];
         
-        // Independent Hysteresis
+        // INDEPENDENT HYSTERESIS:
+        // Only update specific knobs that have moved significantly (>800 raw units).
+        // This prevents noise on one knob from jittering audio on others.
         bool any_changed = false;
         for(int i=0; i<8; i++) {
             if(abs((int)current_vals[i] - (int)last_knob_values[i]) > 800) {
@@ -377,7 +445,7 @@ void GetKnobs()
 }
 
 // ==========================================
-// 7. MAIN
+// 8. MAIN
 // ==========================================
 int main(void)
 {
@@ -433,6 +501,7 @@ int main(void)
         midi.Listen();
         while(midi.HasEvents()) HandleMidiMessage(midi.PopEvent());
 
+        // Live Control Throttled to 20Hz
         uint32_t now = System::GetNow();
         if (now - last_knob_update > 40) 
         {
